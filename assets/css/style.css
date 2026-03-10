@@ -1,156 +1,38 @@
+* { box-sizing: border-box; }
 body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #050505; /* Глубокий черный фон */
-    color: #f0f0f0;
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #050505; font-family: sans-serif;
 }
-
-/* Интерактивный фон на весь экран */
-#liquid-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1; /* За контентом */
+#lava-canvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; filter: blur(40px) contrast(15); background: #000;
 }
-
-/* Общая обертка для контента, чтобы он был поверх фона */
 .main-wrapper {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    position: relative; z-index: 1; display: flex; flex-direction: column;
+    justify-content: space-between; height: 100vh; padding: 15px;
 }
-
-/* Стилизация Glassmorphism (Жидкое стекло) */
-.glass-header, .glass-card, .glass-footer {
-    background: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый */
-    backdrop-filter: blur(10px); /* Размытие фона за элементом */
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.05); /* Едва заметная граница */
-    border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Мягкая тень */
+.glass-header h1 {
+    text-align: center; color: white; letter-spacing: 5px; font-size: 1.5rem; margin: 10px 0;
 }
-
-/* Header */
-.glass-header {
-    text-align: center;
-    padding: 40px 20px;
-    margin: 20px;
+.glass-card {
+    background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px;
+    text-align: center; text-decoration: none; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; transition: 0.3s;
 }
-
-h1 { margin: 0; font-size: 2.2rem; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
-.subtitle { margin: 5px 0 0; font-size: 1rem; color: #aaa; }
-
-/* Grid и Карты */
-.container {
-    flex: 1;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 25px;
+    display: grid; grid-template-rows: repeat(3, 1fr); gap: 10px; height: 65vh;
 }
-
-.card {
-    position: relative;
-    display: block;
-    text-decoration: none;
-    padding: 30px;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden; /* Чтобы свечение не выходило за границы */
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-/* Иконки и текст внутри карт */
-.card-icon svg {
-    width: 50px;
-    height: 50px;
-    color: #fff;
-    margin-bottom: 20px;
-    transition: color 0.3s ease;
-}
-
-.card h3 { color: #fff; margin: 0 0 10px; font-size: 1.3rem; }
-.card p { color: #ccc; margin: 0; font-size: 0.9rem; }
-
-/* --- Неоновое свечение для разных тем --- */
-.glow-edge {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-}
-
-/* Тема 3D: Циан */
-.theme-3d:hover { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
-.theme-3d:hover .card-icon svg { color: #0ff; }
-.theme-3d .glow-edge { background: radial-gradient(circle at center, rgba(0, 255, 255, 0.15) 0%, rgba(0,0,0,0) 70%); }
-.theme-3d:hover .glow-edge { opacity: 1; }
-
-/* Тема Visual: Фиолетовый */
-.theme-visual:hover { box-shadow: 0 0 20px rgba(191, 0, 255, 0.5); }
-.theme-visual:hover .card-icon svg { color: #bf00ff; }
-.theme-visual .glow-edge { background: radial-gradient(circle at center, rgba(191, 0, 255, 0.15) 0%, rgba(0,0,0,0) 70%); }
-.theme-visual:hover .glow-edge { opacity: 1; }
-
-/* Тема Electronics: Зеленый */
-.theme-electronics:hover { box-shadow: 0 0 20px rgba(50, 255, 50, 0.5); }
-.theme-electronics:hover .card-icon svg { color: #32ff32; }
-.theme-electronics .glow-edge { background: radial-gradient(circle at center, rgba(50, 255, 50, 0.15) 0%, rgba(0,0,0,0) 70%); }
-.theme-electronics:hover .glow-edge { opacity: 1; }
-
-/* Footer и кнопки */
-.glass-footer {
-    text-align: center;
-    padding: 30px;
-    margin: 20px;
-}
-
-.contact-btns {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-}
-
+.card-icon { font-size: 2.5rem; margin-bottom: 5px; }
+.card h3 { color: white; margin: 0; font-size: 0.9rem; letter-spacing: 1px; }
+.theme-3d:hover { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+.theme-visual:hover { box-shadow: 0 0 20px rgba(255, 0, 255, 0.3); }
+.theme-electronics:hover { box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); }
+.glass-footer { display: flex; justify-content: center; gap: 10px; padding-bottom: 10px; }
 .btn-contact {
-    display: inline-block;
-    padding: 10px 25px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 30px;
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-    letter-spacing: 1px;
-    transition: background 0.3s ease, transform 0.2s ease;
+    background: rgba(255, 255, 255, 0.1); color: white; padding: 12px 20px;
+    border-radius: 30px; text-decoration: none; font-size: 0.8rem; font-weight: bold; backdrop-filter: blur(5px);
 }
-
-.btn-contact:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.05);
-}
-
-/* Адаптивность для мобильных */
-@media (max-width: 600px) {
-    h1 { font-size: 1.8rem; }
-    .grid { gap: 15px; }
-    .card { padding: 20px; }
+@media (min-width: 768px) {
+    .grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; height: 40vh; align-items: center; }
 }
