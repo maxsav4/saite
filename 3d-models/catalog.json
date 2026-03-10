@@ -1,0 +1,37 @@
+[
+    {
+        "id": "bear-01",
+        "title": "Cyber Bear (Low Poly)",
+        "price": "500 ₴",
+        "status": "available",
+        "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
+    },
+    {
+        "id": "skull-02",
+        "title": "Anatomy Skull Stand",
+        "price": "750 ₴",
+        "status": "order",
+        "image": "https://images.unsplash.com/photo-1594953934789-fce2a3f7ffec?auto=format&fit=crop&q=80&w=600&h=400"
+    },
+    {
+        "id": "lamp-03",
+        "title": "Neon Grid Lamp",
+        "price": "1200 ₴",
+        "status": "available",
+        "image": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=600&h=900"
+    },
+    {
+        "id": "mech-04",
+        "title": "Mecha Parts Kit",
+        "price": "от 300 ₴",
+        "status": "order",
+        "image": "https://images.unsplash.com/photo-1537151377170-9c19a791bbea?auto=format&fit=crop&q=80&w=600&h=600"
+    },
+    {
+        "id": "controller-05",
+        "title": "Custom ESP Case",
+        "price": "400 ₴",
+        "status": "available",
+        "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600&h=500"
+    }
+]
