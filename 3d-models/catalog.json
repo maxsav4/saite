@@ -1,7 +1,7 @@
 [
     {
-        "id": "terea-ar-case",
-        "title": "TEREA AR Case (Tracking)",
+        "id": "terea-case-v1",
+        "title": "TEREA Case V1",
         "price": "350 ₴",
         "status": "available",
         "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
@@ -9,18 +9,26 @@
         "customLinkText": "ПРИМЕРИТЬ В AR"
     },
     {
-        "id": "bear-01",
-        "title": "Cyber Bear",
-        "price": "500 ₴",
+        "id": "project-421",
+        "title": "Module 421",
+        "price": "550 ₴",
         "status": "available",
-        "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
+        "model": "421.glb",
+        "description": "Инженерная деталь, оптимизированная под PETG печать."
     },
     {
-        "id": "astro-01",
-        "title": "Astronaut Model",
-        "price": "800 ₴",
+        "id": "buddy-bot",
+        "title": "Buddy Character",
+        "price": "400 ₴",
         "status": "available",
-        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-        "image": ""
+        "model": "buddy.glb",
+        "description": "Коллекционная фигурка в стиле лоу-поли."
+    },
+    {
+        "id": "astro-demo",
+        "title": "Astronaut (Demo)",
+        "price": "Бесплатно",
+        "status": "available",
+        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb"
     }
 ]
