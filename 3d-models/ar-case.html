@@ -7,8 +7,9 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     
+    <!-- Откатили до стабильной версии 1.2.2, которая точно работала -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; font-family: 'Space Grotesk', sans-serif; }
@@ -74,11 +75,10 @@
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). Размер идеальный (с прошлого раза). -->
+            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). -->
             <a-box position="-0.05 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
 
             <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-            <!-- ИСПРАВЛЕНИЕ: масштаб scale изменен с "1 1 1" на "0.55 0.55 0.55" -->
             <a-gltf-model 
                 src="#case-model" 
                 position="-0.05 0 0" 
@@ -109,24 +109,21 @@
             });
         }
 
-        const autofocusInterval = setInterval(() => {
-            const video = document.querySelector('video');
-            if (video && video.srcObject) {
-                const track = video.srcObject.getVideoTracks()[0];
-                if (track && typeof track.applyConstraints === 'function') {
-                    track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-                    clearInterval(autofocusInterval);
+        // БЕЗОПАСНЫЙ автофокус только по тапу экрана (чтобы не перегружать видеопоток)
+        document.body.addEventListener('click', async () => {
+            try {
+                const video = document.querySelector('video');
+                if (video && video.srcObject) {
+                    const track = video.srcObject.getVideoTracks()[0];
+                    if (track && typeof track.applyConstraints === 'function') {
+                        const capabilities = track.getCapabilities();
+                        if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+                            await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+                        }
+                    }
                 }
-            }
-        }, 2000);
-
-        document.body.addEventListener('click', () => {
-            const video = document.querySelector('video');
-            if (video && video.srcObject) {
-                const track = video.srcObject.getVideoTracks()[0];
-                if (track && typeof track.applyConstraints === 'function') {
-                    track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-                }
+            } catch (err) {
+                console.warn("Фокус не поддерживается на этом устройстве");
             }
         });
     </script>
