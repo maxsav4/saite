@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
     
-    <!-- Библиотека 3D и AR -->
+    <!-- Библиотека 3D и AR (Model Viewer) -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
@@ -33,10 +33,9 @@
 
         .product-card { break-inside: avoid; margin-bottom: 30px; position: relative; border-radius: 20px; overflow: hidden; background: rgba(15, 15, 15, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.5); cursor: pointer; transform: translateZ(0); transition: border-color 0.4s; }
         .product-card:hover { border-color: rgba(255, 255, 255, 0.3); }
-        .media-container { width: 100%; position: relative; background: #000; display: block; }
+        .media-container { width: 100%; position: relative; background: #000; display: block; min-height: 250px; }
         .product-image { width: 100%; display: block; object-fit: cover; transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
-        /* Стили плеера 3D */
         model-viewer { width: 100%; height: 400px; background-color: transparent; --poster-color: transparent; outline: none; }
         .product-card:hover .product-image { transform: scale(1.03); }
 
@@ -44,36 +43,24 @@
         .status-available { background: rgba(0, 255, 150, 0.15); color: #00ff96; border: 1px solid rgba(0, 255, 150, 0.4); }
         .status-order { background: rgba(255, 100, 255, 0.15); color: #ff64ff; border: 1px solid rgba(255, 100, 255, 0.4); }
 
-        /* Кнопка включения AR (появляется только на телефонах с поддержкой) */
-        .btn-ar {
-            position: absolute;
-            top: 20px; right: 20px;
-            background: rgba(0, 200, 255, 0.2);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 200, 255, 0.6);
-            color: #00ffff;
-            padding: 8px 15px;
-            border-radius: 30px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            z-index: 5;
-            box-shadow: 0 0 15px rgba(0, 200, 255, 0.3);
-            transition: 0.3s;
+        /* Кнопка включения стандартного AR (для model-viewer) */
+        .btn-viewer-ar {
+            position: absolute; top: 20px; right: 20px; background: rgba(0, 200, 255, 0.2); backdrop-filter: blur(15px); border: 1px solid rgba(0, 200, 255, 0.6); color: #00ffff; padding: 8px 15px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; z-index: 5; box-shadow: 0 0 15px rgba(0, 200, 255, 0.3); transition: 0.3s;
         }
-        .btn-ar:hover { background: rgba(0, 200, 255, 0.4); box-shadow: 0 0 25px rgba(0, 200, 255, 0.6); }
+        .btn-viewer-ar:hover { background: rgba(0, 200, 255, 0.4); box-shadow: 0 0 25px rgba(0, 200, 255, 0.6); }
 
         .product-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%); padding: 50px 25px 25px; display: flex; flex-direction: column; gap: 12px; opacity: 0; transform: translateY(15px); transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); z-index: 10; pointer-events: none; }
         .product-card:hover .product-overlay { opacity: 1; transform: translateY(0); pointer-events: auto; }
         .product-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin: 0; color: #fff; line-height: 1.2; }
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
         .product-price { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 900; color: #fff; }
+        
         .btn-order { background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
         .btn-order:hover { background: #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); transform: scale(1.05); }
+
+        /* Стиль для спец-кнопки (AR-трекинг) */
+        .btn-special { background: #00ffcc; color: #000; box-shadow: 0 0 15px rgba(0,255,204,0.4); border: none; }
+        .btn-special:hover { background: #fff; box-shadow: 0 0 25px rgba(0,255,204,0.7); }
 
         @media (max-width: 950px) { .product-overlay { opacity: 1; transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 60%, transparent 100%); pointer-events: auto; } model-viewer { height: 350px; } }
     </style>
@@ -106,9 +93,9 @@
                 if (!response.ok) throw new Error('Файл не найден');
                 products = await response.json();
             } catch (error) {
+                // Демо-данные, если catalog.json не найден
                 products = [
-                    { "id": "astro-01", "title": "Astronaut Model", "price": "800 ₴", "status": "available", "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb", "image": "" },
-                    { "id": "bear-01", "title": "Cyber Bear (Low Poly)", "price": "500 ₴", "status": "available", "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800" }
+                    { "id": "astro-01", "title": "Astronaut Model (Standard AR)", "price": "800 ₴", "status": "available", "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb", "image": "" },
                 ];
             }
             
@@ -117,41 +104,61 @@
             products.forEach(product => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
+
                 const isAvailable = product.status === 'available';
                 const statusClass = isAvailable ? 'status-available' : 'status-order';
                 const statusText = isAvailable ? 'В НАЛИЧИИ' : 'ПОД ЗАКАЗ';
-                const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
-                const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
 
+                // Логика для медиа (Картинка или 3D плеер)
                 let mediaHTML = '';
                 if (product.model) {
-                    // ВАЖНО: Добавлены атрибуты 'ar', 'ar-modes', 'ar-scale' и кастомная кнопка AR
                     mediaHTML = `
                         <model-viewer 
                             src="${product.model}" 
-                            auto-rotate 
-                            rotation-per-second="30deg" 
-                            camera-controls 
-                            interaction-prompt="none" 
-                            shadow-intensity="1" 
-                            exposure="1.2"
-                            ar 
-                            ar-modes="webxr scene-viewer quick-look"
-                            ar-scale="auto">
-                            
-                            <!-- Кнопка AR (появится только на мобильных) -->
-                            <button slot="ar-button" class="btn-ar">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
-                                AR Режим
+                            auto-rotate rotation-per-second="30deg" camera-controls interaction-prompt="none" 
+                            shadow-intensity="1" exposure="1.2"
+                            ar ar-modes="webxr scene-viewer quick-look" 
+                            ar-scale="fixed" ar-placement="floor">
+                            <button slot="ar-button" class="btn-viewer-ar">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg> AR
                             </button>
-                            
                         </model-viewer>`;
                 } else {
                     const imgSrc = product.image ? product.image : 'https://via.placeholder.com/600';
                     mediaHTML = `<img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">`;
                 }
 
-                card.innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span><div class="media-container">${mediaHTML}</div><div class="product-overlay"><h3 class="product-title">${product.title}</h3><div class="price-row"><span class="product-price">${product.price}</span><a href="${tgLink}" target="_blank" class="btn-order"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>ЗАКАЗАТЬ</a></div></div>`;
+                // Логика для кнопок (Заказать или Спец-ссылка)
+                let buttonHTML = '';
+                if (product.customLink) {
+                    // Спец-кнопка (например, для AR-трекинга)
+                    buttonHTML = `
+                        <a href="${product.customLink}" class="btn-order btn-special">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+                            ${product.customLinkText || 'ПЕРЕЙТИ'}
+                        </a>`;
+                } else {
+                    // Обычная кнопка заказа в ТГ
+                    const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
+                    const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
+                    buttonHTML = `
+                        <a href="${tgLink}" target="_blank" class="btn-order">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                            ЗАКАЗАТЬ
+                        </a>`;
+                }
+
+                card.innerHTML = `
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <div class="media-container">${mediaHTML}</div>
+                    <div class="product-overlay">
+                        <h3 class="product-title">${product.title}</h3>
+                        <div class="price-row">
+                            <span class="product-price">${product.price}</span>
+                            ${buttonHTML}
+                        </div>
+                    </div>
+                `;
                 catalogContainer.appendChild(card);
             });
             initGyroAndIdleLogic();
@@ -160,29 +167,12 @@
         function initGyroAndIdleLogic() {
             let lastMoveTime = Date.now(), isIdle = true, lastGamma = 0, lastBeta = 0;
             const viewers = document.querySelectorAll('model-viewer');
-
-            setInterval(() => {
-                if (Date.now() - lastMoveTime > 5000 && !isIdle) {
-                    isIdle = true; viewers.forEach(v => v.setAttribute('auto-rotate', 'true'));
-                }
-            }, 1000);
-
-            window.addEventListener('touchstart', () => {
-                lastMoveTime = Date.now();
-                if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); }
-            }, {passive: true});
-
+            setInterval(() => { if (Date.now() - lastMoveTime > 5000 && !isIdle) { isIdle = true; viewers.forEach(v => v.setAttribute('auto-rotate', 'true')); } }, 1000);
+            window.addEventListener('touchstart', () => { lastMoveTime = Date.now(); if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); } }, {passive: true});
             window.addEventListener('deviceorientation', (e) => {
                 if (!e.gamma || !e.beta) return;
                 const delta = Math.abs(e.gamma - lastGamma) + Math.abs(e.beta - lastBeta);
-                if (delta > 1.5) {
-                    lastMoveTime = Date.now(); lastGamma = e.gamma; lastBeta = e.beta;
-                    if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); }
-                    viewers.forEach(v => {
-                        const theta = e.gamma * 1.5, phi = 75 + (e.beta - 45); 
-                        v.cameraOrbit = `${theta}deg ${phi}deg auto`;
-                    });
-                }
+                if (delta > 1.5) { lastMoveTime = Date.now(); lastGamma = e.gamma; lastBeta = e.beta; if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); } viewers.forEach(v => { const theta = e.gamma * 1.5, phi = 75 + (e.beta - 45); v.cameraOrbit = `${theta}deg ${phi}deg auto`; }); }
             });
         }
         loadCatalog();
