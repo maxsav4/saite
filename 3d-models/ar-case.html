@@ -7,12 +7,10 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     
-    <!-- Подключаем стабильные версии A-Frame и MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-        /* ВАЖНО: background: transparent; позволяет видеть видео с камеры телефона! */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; font-family: 'Space Grotesk', sans-serif; }
         
         .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
@@ -25,36 +23,24 @@
         
         @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
         
-        /* Скрываем стандартный загрузчик MindAR */
         #example-scanning-overlay { display: none !important; }
 
-        /* Сообщение об ошибке, если камера недоступна */
-        #error-message {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px;
-            display: none; z-index: 2000; text-align: center;
-        }
+        #error-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px; display: none; z-index: 2000; text-align: center; }
     </style>
 
     <script>
-        // Окклюзия (создаем невидимую маску, чтобы чехол не просвечивал сквозь реальную пачку)
+        // Окклюзия (невидимая маска)
         AFRAME.registerComponent('occlusion-material', {
             init: function () {
                 const mesh = this.el.getObject3D('mesh');
-                if (mesh) {
-                    mesh.material.colorWrite = false;
-                }
+                if (mesh) { mesh.material.colorWrite = false; }
             }
         });
 
-        // Проверка доступа к камере
         window.addEventListener('load', () => {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 const err = document.getElementById('error-message');
-                if (err) {
-                    err.style.display = 'block';
-                    err.innerText = "Ваш браузер не поддерживает доступ к камере или доступ заблокирован.";
-                }
+                if (err) { err.style.display = 'block'; err.innerText = "Ваш браузер не поддерживает доступ к камере."; }
             }
         });
     </script>
@@ -63,7 +49,6 @@
 
     <div id="error-message"></div>
 
-    <!-- Интерфейс поверх камеры -->
     <div class="ui-overlay">
         <div class="header">
             <a href="index.html" class="back-btn">
@@ -74,9 +59,6 @@
         </div>
     </div>
 
-    <!-- 
-        AR СЦЕНА 
-    -->
     <a-scene 
         mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
         color-space="sRGB" 
@@ -84,24 +66,23 @@
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
         
-        <!-- ЗАГРУЗКА ТВОЕЙ 3D МОДЕЛИ -->
         <a-assets>
             <a-asset-item id="case-model" src="terea.glb"></a-asset-item>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Сущность, привязанная к картинке из targets.mind -->
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия) - Масштаб увеличен на 10%, смещение X -0.05 -->
+            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). Размер идеальный (с прошлого раза). -->
             <a-box position="-0.05 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
 
             <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
+            <!-- ИСПРАВЛЕНИЕ: масштаб scale изменен с "1 1 1" на "0.55 0.55 0.55" -->
             <a-gltf-model 
                 src="#case-model" 
                 position="-0.05 0 0" 
-                scale="1 1 1"
+                scale="0.55 0.55 0.55"
                 rotation="0 0 0">
             </a-gltf-model>
 
@@ -112,7 +93,6 @@
         const target = document.querySelector('#target-box');
         const statusText = document.querySelector('#status-text');
 
-        // Логика интерфейса при нахождении/потере цели
         if (target) {
             target.addEventListener("targetFound", () => {
                 statusText.innerText = "ЗАХВАТ УСПЕШЕН!";
@@ -129,26 +109,17 @@
             });
         }
 
-        // ==========================================
-        // УЛУЧШЕННЫЙ АВТОФОКУС И TAP-TO-FOCUS
-        // ==========================================
-        
-        // Попытка программно включить непрерывный автофокус при старте
         const autofocusInterval = setInterval(() => {
             const video = document.querySelector('video');
             if (video && video.srcObject) {
                 const track = video.srcObject.getVideoTracks()[0];
-                if (track) {
-                    if (typeof track.applyConstraints === 'function') {
-                        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
-                            .catch(() => {});
-                    }
+                if (track && typeof track.applyConstraints === 'function') {
+                    track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
                     clearInterval(autofocusInterval);
                 }
             }
         }, 2000);
 
-        // Ручной фокус по клику на любой участок экрана (Tap to Focus)
         document.body.addEventListener('click', () => {
             const video = document.querySelector('video');
             if (video && video.srcObject) {
