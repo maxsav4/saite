@@ -7,52 +7,64 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     
+    <!-- Подключаем стабильные версии A-Frame и MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-        /* background: transparent - для видеопотока с камеры */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; font-family: 'Space Grotesk', sans-serif; }
-        
         .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
-        
         .back-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.5); color: #00ffcc; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        
         .status-box { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
-        
         @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
-        
-        /* Скрываем стандартный загрузчик MindAR */
         #example-scanning-overlay { display: none !important; }
+        
+        /* Сообщение об ошибке, если камера недоступна */
+        #error-message {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px;
+            display: none; z-index: 2000; text-align: center;
+        }
     </style>
 
     <script>
-        // Окклюзия (маска-невидимка)
+        // Компонент для создания эффекта окклюзии (невидимый материал)
         AFRAME.registerComponent('occlusion-material', {
             init: function () {
-                this.el.getObject3D('mesh').material.colorWrite = false;
+                const mesh = this.el.getObject3D('mesh');
+                if (mesh) {
+                    mesh.material.colorWrite = false;
+                }
+            }
+        });
+
+        // Проверка доступа к камере
+        window.addEventListener('load', () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const err = document.getElementById('error-message');
+                if (err) {
+                    err.style.display = 'block';
+                    err.innerText = "Ваш браузер не поддерживает доступ к камере или доступ заблокирован.";
+                }
             }
         });
     </script>
 </head>
 <body>
 
-    <!-- Интерфейс поверх камеры -->
+    <div id="error-message"></div>
+
     <div class="ui-overlay">
         <div class="header">
-            <a href="index.html" class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                В КАТАЛОГ
-            </a>
+            <a href="index.html" class="back-btn">В КАТАЛОГ</a>
             <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
         </div>
-        <!-- ПРИЦЕЛ ПОЛНОСТЬЮ УДАЛЕН -->
     </div>
 
     <!-- 
-        AR СЦЕНА 
+        Настройки MindAR:
+        filterMinCF и filterBeta отвечают за сглаживание дрожания (тремора рук).
     -->
     <a-scene 
         mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
@@ -61,31 +73,23 @@
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
         
+        <a-assets>
+            <a-asset-item id="case-model" src="terea1.glb"></a-asset-item>
+        </a-assets>
+
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
-            
-            <!-- 
-                1. НЕВИДИМАЯ ДЫРКА (Окклюзия)
-                Масштаб увеличен на 10%, позиция смещена влево по оси X на -0.05
-            -->
+            <!-- Маска окклюзии: скрывает то, что за коробкой -->
             <a-box position="-0.05 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
 
-            <!-- 2. ВИДИМЫЙ ЧЕХОЛ (Голограмма) -->
-            <!-- Чуть-чуть больше маски окклюзии, также увеличено на 10%, позиция смещена влево -->
-            <a-box position="-0.05 0 0" scale="0.57 0.87 0.19" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
-            <a-box position="-0.05 0 0" scale="0.58 0.88 0.20" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
-
-            <!-- 
-                КОГДА СДЕЛАЕШЬ СВОЙ .GLB ФАЙЛ, ИСПОЛЬЗУЙ ЭТОТ КОД:
-                (заменив масштаб scale на нужный и сохранив позицию)
-
-                <a-assets>
-                    <a-asset-item id="case-model" src="my_case.glb"></a-asset-item>
-                </a-assets>
-                <a-gltf-model src="#case-model" position="-0.05 0 0" scale="0.55 0.55 0.55"></a-gltf-model>
-            -->
-
+            <!-- 3D модель чехла -->
+            <a-gltf-model 
+                src="#case-model" 
+                position="-0.05 0 0" 
+                scale="1 1 1"
+                rotation="0 0 0">
+            </a-gltf-model>
         </a-entity>
     </a-scene>
 
@@ -93,60 +97,41 @@
         const target = document.querySelector('#target-box');
         const statusText = document.querySelector('#status-text');
 
-        // Логика интерфейса
-        target.addEventListener("targetFound", event => {
-            statusText.innerText = "ЗАХВАТ УСПЕШЕН!";
-            statusText.style.background = "rgba(0, 255, 150, 0.8)";
-            statusText.style.borderColor = "#00ff96";
-            statusText.style.color = "#000";
-        });
+        if (target) {
+            target.addEventListener("targetFound", () => {
+                statusText.innerText = "ЗАХВАТ УСПЕШЕН!";
+                statusText.style.background = "rgba(0, 255, 150, 0.8)";
+                statusText.style.borderColor = "#00ff96";
+                statusText.style.color = "#000";
+            });
 
-        target.addEventListener("targetLost", event => {
-            statusText.innerText = "ПОИСК ЦЕЛИ...";
-            statusText.style.background = "rgba(0, 0, 0, 0.7)";
-            statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
-            statusText.style.color = "#fff";
-        });
+            target.addEventListener("targetLost", () => {
+                statusText.innerText = "ПОИСК ЦЕЛИ...";
+                statusText.style.background = "rgba(0, 0, 0, 0.7)";
+                statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
+                statusText.style.color = "#fff";
+            });
+        }
 
-        // ==========================================
-        // УЛУЧШЕННЫЙ АВТОФОКУС И TAP-TO-FOCUS
-        // ==========================================
-        
-        // Попытка программно включить непрерывный автофокус при старте
-        const enableAutofocus = setInterval(() => {
+        // Безопасный автофокус: проверяем поддержку перед применением
+        const autofocusInterval = setInterval(() => {
             const video = document.querySelector('video');
             if (video && video.srcObject) {
                 const track = video.srcObject.getVideoTracks()[0];
                 if (track) {
-                    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-                    if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
-                        track.applyConstraints({
-                            advanced: [{ focusMode: 'continuous' }]
-                        }).catch(e => console.log(e));
-                    } else {
-                        // Если API не отдало список, пробуем "вслепую"
-                        track.applyConstraints({
-                            advanced: [{ focusMode: 'continuous' }]
-                        }).catch(e => console.log());
+                    // Проверяем, поддерживает ли браузер/камера применение ограничений (constraints)
+                    if (typeof track.applyConstraints === 'function') {
+                        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+                            .catch(() => {
+                                // Если автофокус не поддерживается, просто игнорируем ошибку
+                            });
                     }
-                    clearInterval(enableAutofocus); // Останавливаем цикл
+                    clearInterval(autofocusInterval);
                 }
             }
-        }, 1500);
+        }, 2000);
 
-        // Ручной фокус по клику на любой участок экрана (Tap to Focus)
+        // Ручной "пинок" автофокуса по нажатию на экран
         document.body.addEventListener('click', () => {
             const video = document.querySelector('video');
-            if (video && video.srcObject) {
-                const track = video.srcObject.getVideoTracks()[0];
-                if (track) {
-                    // Пинаем фокус
-                    track.applyConstraints({
-                        advanced: [{ focusMode: 'continuous' }]
-                    }).catch(e => console.log());
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+            if (video && video.srcObject)
