@@ -15,6 +15,11 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #050505; color: #fff; font-family: 'Outfit', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
+        
+        /* Запрет выделения текста и перетаскивания картинок для защиты */
+        img { pointer-events: none; -webkit-user-drag: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+
         .bg-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; animation: floatOrb 20s infinite alternate ease-in-out; opacity: 0.4; pointer-events: none;}
         .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #00ffcc; }
         .orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #ff00ff; animation-delay: -5s; }
@@ -43,7 +48,9 @@
         .status-available { background: rgba(0, 255, 150, 0.15); color: #00ff96; border: 1px solid rgba(0, 255, 150, 0.4); }
         .status-order { background: rgba(255, 100, 255, 0.15); color: #ff64ff; border: 1px solid rgba(255, 100, 255, 0.4); }
 
-        /* Кнопка включения стандартного AR (для model-viewer) */
+        /* Пометка "Только просмотр" */
+        .preview-label { position: absolute; bottom: 10px; right: 10px; font-size: 0.6rem; color: rgba(255,255,255,0.3); font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; z-index: 5; }
+
         .btn-viewer-ar {
             position: absolute; top: 20px; right: 20px; background: rgba(0, 200, 255, 0.2); backdrop-filter: blur(15px); border: 1px solid rgba(0, 200, 255, 0.6); color: #00ffff; padding: 8px 15px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; z-index: 5; box-shadow: 0 0 15px rgba(0, 200, 255, 0.3); transition: 0.3s;
         }
@@ -58,14 +65,13 @@
         .btn-order { background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
         .btn-order:hover { background: #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); transform: scale(1.05); }
 
-        /* Стиль для спец-кнопки (AR-трекинг) */
         .btn-special { background: #00ffcc; color: #000; box-shadow: 0 0 15px rgba(0,255,204,0.4); border: none; }
         .btn-special:hover { background: #fff; box-shadow: 0 0 25px rgba(0,255,204,0.7); }
 
         @media (max-width: 950px) { .product-overlay { opacity: 1; transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 60%, transparent 100%); pointer-events: auto; } model-viewer { height: 350px; } }
     </style>
 </head>
-<body>
+<body class="no-select" oncontextmenu="return false;">
 
     <div class="bg-orb orb-1"></div>
     <div class="bg-orb orb-2"></div>
@@ -93,7 +99,6 @@
                 if (!response.ok) throw new Error('Файл не найден');
                 products = await response.json();
             } catch (error) {
-                // Демо-данные, если catalog.json не найден
                 products = [
                     { "id": "astro-01", "title": "Astronaut Model (Standard AR)", "price": "800 ₴", "status": "available", "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb", "image": "" },
                 ];
@@ -109,36 +114,35 @@
                 const statusClass = isAvailable ? 'status-available' : 'status-order';
                 const statusText = isAvailable ? 'В НАЛИЧИИ' : 'ПОД ЗАКАЗ';
 
-                // Логика для медиа (Картинка или 3D плеер)
                 let mediaHTML = '';
                 if (product.model) {
+                    // Добавлен запрет контекстного меню прямо на плеер
                     mediaHTML = `
                         <model-viewer 
                             src="${product.model}" 
                             auto-rotate rotation-per-second="30deg" camera-controls interaction-prompt="none" 
                             shadow-intensity="1" exposure="1.2"
                             ar ar-modes="webxr scene-viewer quick-look" 
-                            ar-scale="fixed" ar-placement="floor">
+                            ar-scale="fixed" ar-placement="floor"
+                            oncontextmenu="return false;">
                             <button slot="ar-button" class="btn-viewer-ar">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg> AR
                             </button>
+                            <div class="preview-label">PREVIEW ONLY</div>
                         </model-viewer>`;
                 } else {
                     const imgSrc = product.image ? product.image : 'https://via.placeholder.com/600';
                     mediaHTML = `<img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">`;
                 }
 
-                // Логика для кнопок (Заказать или Спец-ссылка)
                 let buttonHTML = '';
                 if (product.customLink) {
-                    // Спец-кнопка (например, для AR-трекинга)
                     buttonHTML = `
                         <a href="${product.customLink}" class="btn-order btn-special">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
                             ${product.customLinkText || 'ПЕРЕЙТИ'}
                         </a>`;
                 } else {
-                    // Обычная кнопка заказа в ТГ
                     const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
                     const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
                     buttonHTML = `
