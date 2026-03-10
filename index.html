@@ -3,35 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro-Maker Hub</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <title>Pro-Maker Hub | maxsav4</title>
+    <style>
+        /* === БАЗОВЫЕ СТИЛИ И ФОН === */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            width: 100%; height: 100vh;
+            overflow: hidden; /* Строго без прокрутки */
+            background-color: #030305; /* Глубокий темный фон */
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+        }
+
+        /* === 3D ЛАВА ЛАМПА (SVG ФИЛЬТР + CANVAS) === */
+        #lava-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0; /* Строго позади контента */
+            pointer-events: none; /* Чтобы не мешало нажимать на кнопки */
+            filter: url(#liquid-goo); /* Применяем SVG магию перетекания */
+        }
+        canvas {
+            display: block;
+            width: 100%; height: 100%;
+        }
+
+        /* === ИНТЕРФЕЙС === */
+        .main-wrapper {
+            position: relative;
+            z-index: 10; /* Поверх лавы */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            padding: 20px;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        .glass-header h1 {
+            text-align: center;
+            letter-spacing: 6px;
+            font-size: 1.8rem;
+            margin: 20px 0 5px;
+            font-weight: 800;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+        }
+        .glass-header p {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #aaa;
+            letter-spacing: 2px;
+        }
+
+        /* === СЕТКА И КАРТОЧКИ === */
+        .container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .glass-card {
+            background: rgba(20, 20, 25, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 25px;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .glass-card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s;
+        }
+        .glass-card:hover::before { left: 100%; }
+        .glass-card:hover { transform: translateY(-5px) scale(1.02); }
+
+        /* Иконки и Текст */
+        .card-icon {
+            width: 50px; height: 50px;
+            margin-right: 20px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-icon svg { width: 100%; height: 100%; fill: none; stroke-width: 1.5; }
+        .card-content { text-align: left; }
+        .card-content h3 { color: white; margin: 0 0 5px; font-size: 1.1rem; letter-spacing: 1px; }
+        .card-content p { color: #888; margin: 0; font-size: 0.8rem; }
+
+        /* Индивидуальные цвета при наведении */
+        .theme-3d:hover { box-shadow: 0 10px 40px rgba(0, 200, 255, 0.4); border-color: rgba(0, 200, 255, 0.4); }
+        .theme-3d svg { stroke: #00c8ff; }
+
+        .theme-visual:hover { box-shadow: 0 10px 40px rgba(255, 0, 200, 0.4); border-color: rgba(255, 0, 200, 0.4); }
+        .theme-visual svg { stroke: #ff00c8; }
+
+        .theme-electronics:hover { box-shadow: 0 10px 40px rgba(0, 255, 100, 0.4); border-color: rgba(0, 255, 100, 0.4); }
+        .theme-electronics svg { stroke: #00ff64; }
+
+        /* === ПОДВАЛ И КНОПКИ === */
+        .glass-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding-bottom: 20px;
+        }
+        .btn-contact {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+        .btn-contact:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-3px); }
+
+        /* ПК Версия */
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; max-width: 1200px; gap: 30px; }
+            .glass-card { flex-direction: column; text-align: center; padding: 40px 20px; }
+            .card-icon { margin-right: 0; margin-bottom: 20px; width: 70px; height: 70px; }
+            .card-content { text-align: center; }
+            .glass-header h1 { font-size: 2.5rem; }
+        }
+    </style>
 </head>
 <body>
-    <canvas id="lava-canvas"></canvas>
+
+    <!-- Скрытый SVG фильтр для эффекта 3D перетекания (Metaballs) -->
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="liquid-goo">
+            <!-- Размываем объекты -->
+            <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur" />
+            <!-- Увеличиваем контраст альфа-канала, чтобы склеить края -->
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -12" result="goo" />
+            <!-- Добавляем внутреннюю тень для объема (3D эффект) -->
+            <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000" flood-opacity="0.7" result="shadow" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+    </svg>
+
+    <!-- Холст Лава-лампы -->
+    <div id="lava-container">
+        <canvas id="lava-canvas"></canvas>
+    </div>
+
+    <!-- Основной интерфейс -->
     <div class="main-wrapper">
         <header class="glass-header">
-            <h1>PRO-MAKER</h1>
+            <h1>MAXSAV4</h1>
+            <p>ENGINEERING & VISUAL ART</p>
         </header>
+
         <main class="container">
             <div class="grid">
-                <a href="https://github.com/maxsav4/saite/tree/main/3d-models" class="card glass-card theme-3d">
-                    <div class="card-icon">🐻</div><h3>3D MODELS</h3>
+                
+                <!-- 3D Модели (Иконка Мишки) -->
+                <a href="https://github.com/maxsav4/saite/tree/main/3d-models" class="glass-card theme-3d">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" stroke="currentColor">
+                            <!-- Стилизованная голова медведя (Low Poly стиль) -->
+                            <path d="M12 2C8 2 5 5 5 9C5 10.5 5.5 11.8 6.2 13C5 14.5 3 16 3 19V21H21V19C21 16 19 14.5 17.8 13C18.5 11.8 19 10.5 19 9C19 5 16 2 12 2Z" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="8.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
+                            <circle cx="15.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
+                            <path d="M12 14C11 14 10 15 10 16H14C14 15 13 14 12 14Z" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 9C3 9 2 8 2 6C2 5 3 4 5 5" stroke-linecap="round"/>
+                            <path d="M19 9C21 9 22 8 22 6C22 5 21 4 19 5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>3D MODELS</h3>
+                        <p>Printable & Arts</p>
+                    </div>
                 </a>
-                <a href="https://github.com/maxsav4/saite/tree/main/visual-mapping" class="card glass-card theme-visual">
-                    <div class="card-icon">📽️</div><h3>MAPPING</h3>
+
+                <!-- Визуал (Иконка Проектора/Лазера) -->
+                <a href="https://github.com/maxsav4/saite/tree/main/visual-mapping" class="glass-card theme-visual">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" stroke="currentColor">
+                            <!-- Проектор и лучи -->
+                            <rect x="3" y="8" width="14" height="8" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 10L22 6M17 14L22 18M18 12H23" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 16V18M10 16V18" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>MAPPING</h3>
+                        <p>Lasers & Projections</p>
+                    </div>
                 </a>
-                <a href="https://github.com/maxsav4/saite/tree/main/electronics" class="card glass-card theme-electronics">
-                    <div class="card-icon">🚥</div><h3>ELECTRONICS</h3>
+
+                <!-- Электроника (Иконка Платы с огоньками) -->
+                <a href="https://github.com/maxsav4/saite/tree/main/electronics" class="glass-card theme-electronics">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" stroke="currentColor">
+                            <!-- Микросхема -->
+                            <rect x="5" y="5" width="14" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 2V5M12 2V5M16 2V5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 19V22M12 19V22M16 19V22" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 8H5M2 12H5M2 16H5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M19 8H22M19 12H22M19 16H22" stroke-linecap="round" stroke-linejoin="round"/>
+                            <!-- Огоньки (Точки внутри) -->
+                            <circle cx="9" cy="9" r="0.5" fill="currentColor"/>
+                            <circle cx="15" cy="15" r="0.5" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>ELECTRONICS</h3>
+                        <p>ESP32 & Hardware</p>
+                    </div>
                 </a>
+
             </div>
         </main>
+
         <footer class="glass-footer">
-            <div class="contact-btns">
-                <a href="https://instagram.com/ТВОЙ_НИК" class="btn-contact">INSTAGRAM</a>
-                <a href="https://t.me/ТВОЙ_НИК" class="btn-contact">TELEGRAM</a>
-            </div>
+            <a href="https://instagram.com/maxsav4" class="btn-contact">INSTAGRAM</a>
+            <a href="https://t.me/maxsav4" class="btn-contact">TELEGRAM</a>
+            <a href="https://github.com/maxsav4" class="btn-contact">GITHUB</a>
         </footer>
     </div>
-    <script src="assets/js/lava.js"></script>
+
+    <!-- === ФИЗИКА ЛАВЫ === -->
+    <script>
+        const canvas = document.getElementById('lava-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let blobs = [];
+        
+        // Палитра киберпанк/неон
+        const colors = ['#00c8ff', '#ff00c8', '#7b00ff', '#00ff64'];
+        
+        let mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+        let gyro = { x: 0, y: 0 };
+        let currentGravity = { x: 0, y: 0 };
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            blobs = [];
+            
+            // Создаем капли разных размеров
+            const isMobile = width < 768;
+            const blobCount = isMobile ? 8 : 12; // На мобилках чуть меньше для идеальной плавности
+            
+            for (let i = 0; i < blobCount; i++) {
+                blobs.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    baseSize: Math.random() * (isMobile ? 80 : 120) + 60, // Размер
+                    color: colors[i % colors.length]
+                });
+            }
+        }
+
+        function draw() {
+            // Очищаем прозрачным (SVG фильтр наложит контраст сам)
+            ctx.clearRect(0, 0, width, height);
+            
+            // Плавное применение гравитации гироскопа
+            currentGravity.x += (gyro.x - currentGravity.x) * 0.05;
+            currentGravity.y += (gyro.y - currentGravity.y) * 0.05;
+
+            blobs.forEach(blob => {
+                // Применяем скорости и гироскоп
+                blob.x += blob.vx + currentGravity.x;
+                blob.y += blob.vy + currentGravity.y;
+
+                // Взаимодействие с мышью (мягкое притяжение)
+                let dx = mouse.x - blob.x;
+                let dy = mouse.y - blob.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 350) {
+                    blob.x += dx * 0.005;
+                    blob.y += dy * 0.005;
+                }
+
+                // Упругое отталкивание от краев экрана
+                const margin = 50;
+                if (blob.x < -margin) blob.vx += 0.2;
+                if (blob.x > width + margin) blob.vx -= 0.2;
+                if (blob.y < -margin) blob.vy += 0.2;
+                if (blob.y > height + margin) blob.vy -= 0.2;
+
+                // Ограничение максимальной скорости
+                blob.vx *= 0.99;
+                blob.vy *= 0.99;
+
+                // Отрисовка капли (рисуем с радиальным градиентом для эффекта свечения)
+                const grad = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.baseSize);
+                grad.addColorStop(0, blob.color);
+                grad.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(blob.x, blob.y, blob.baseSize, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        // Отслеживание мыши
+        window.addEventListener('mousemove', e => { 
+            mouse.x = e.clientX; 
+            mouse.y = e.clientY; 
+        });
+        
+        // Чтобы на телефоне не улетало в угол, если взять криво — мы калибруем начальный угол
+        let initialBeta = null;
+        window.addEventListener('deviceorientation', e => {
+            if (!e.gamma || !e.beta) return;
+            
+            if (initialBeta === null) initialBeta = e.beta;
+            
+            // gamma - наклон влево/вправо (-90 до 90)
+            // beta - наклон вперед/назад 
+            gyro.x = Math.max(-10, Math.min(10, e.gamma * 0.15));
+            gyro.y = Math.max(-10, Math.min(10, (e.beta - initialBeta) * 0.15));
+        });
+
+        // Перекалибровка при долгом нажатии (если человек поменял позу)
+        window.addEventListener('touchstart', () => { initialBeta = null; }, {passive: true});
+
+        window.addEventListener('resize', init);
+        init(); 
+        draw();
+    </script>
 </body>
 </html>
