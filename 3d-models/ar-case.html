@@ -75,9 +75,9 @@
             <div class="val-display" id="pos-val">Pos: X: -0.050, Y: 0.000</div>
             
             <p style="margin-top: 10px;">2. Ползунок масштаба (Размер):</p>
-            <div class="val-display" id="scale-val">Scale: 0.150</div>
-            <!-- Диапазон изменен под новые значения -->
-            <input type="range" id="scale-slider" min="0.05" max="0.5" step="0.005" value="0.15">
+            <div class="val-display" id="scale-val">Scale: 0.050</div>
+            <!-- Диапазон изменен под очень маленькие значения -->
+            <input type="range" id="scale-slider" min="0.01" max="0.3" step="0.001" value="0.05">
         </div>
     </div>
 
@@ -99,19 +99,19 @@
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- Обертка калибровки: базовый масштаб установлен на 0.15 -->
-            <a-entity id="adjustable-wrapper" position="-0.05 0 0" scale="0.15 0.15 0.15">
+            <!-- Обертка калибровки: базовый масштаб установлен на 0.05 -->
+            <a-entity id="adjustable-wrapper" position="-0.05 0 0" scale="0.05 0.05 0.05">
                 
                 <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). Внутренние пропорции коробки -->
                 <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
                 <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-                <!-- ВСЕ ПОВОРОТЫ ОБНУЛЕНЫ (rotation="0 0 0") -->
+                <!-- Поворот на 90 градусов по часовой стрелке по оси Y (-90) -->
                 <a-gltf-model 
                     src="#case-model" 
                     position="0 0 0" 
                     scale="1 1 1"
-                    rotation="0 0 0">
+                    rotation="0 -90 0">
                 </a-gltf-model>
 
             </a-entity>
