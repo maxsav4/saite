@@ -1,31 +1,26 @@
 [
     {
-        "id": "astro-01",
-        "title": "Astronaut Model (3D)",
-        "price": "800 ₴",
+        "id": "terea-ar-case",
+        "title": "TEREA AR Case (Tracking)",
+        "price": "350 ₴",
         "status": "available",
-        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-        "image": ""
+        "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
+        "customLink": "ar-case.html",
+        "customLinkText": "ПРИМЕРИТЬ В AR"
     },
     {
         "id": "bear-01",
-        "title": "Cyber Bear (Low Poly)",
+        "title": "Cyber Bear",
         "price": "500 ₴",
         "status": "available",
         "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
     },
     {
-        "id": "skull-02",
-        "title": "Anatomy Skull Stand",
-        "price": "750 ₴",
-        "status": "order",
-        "image": "https://images.unsplash.com/photo-1594953934789-fce2a3f7ffec?auto=format&fit=crop&q=80&w=600&h=400"
-    },
-    {
-        "id": "lamp-03",
-        "title": "Neon Grid Lamp",
-        "price": "1200 ₴",
+        "id": "astro-01",
+        "title": "Astronaut Model",
+        "price": "800 ₴",
         "status": "available",
-        "image": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=600&h=900"
+        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+        "image": ""
     }
 ]
