@@ -22,21 +22,6 @@
         .status-box { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
         
         @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
-        
-        /* ПАНЕЛЬ КАЛИБРОВКИ */
-        .calibration-ui {
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border: 1px solid #ff00ff;
-            padding: 15px 20px; border-radius: 20px; pointer-events: auto; color: white; display: flex; flex-direction: column; gap: 8px;
-            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3); margin-bottom: 20px;
-        }
-        .calibration-ui h3 { margin: 0 0 5px 0; font-size: 1rem; color: #ff00ff; text-transform: uppercase; }
-        .calibration-ui p { margin: 0; font-size: 0.75rem; color: #aaa; }
-        .calibration-ui .val-display { color: #00ffcc; font-size: 0.9rem; font-family: monospace; }
-        .calibration-ui input[type=range] { width: 100%; accent-color: #ff00ff; margin-top: 5px; }
-        
-        .rot-btn-group { display: flex; gap: 10px; margin-top: 5px; }
-        .rot-btn { flex: 1; background: rgba(255, 0, 255, 0.2); border: 1px solid #ff00ff; color: #fff; padding: 8px 0; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .rot-btn:active { background: rgba(255, 0, 255, 0.6); }
 
         #example-scanning-overlay { display: none !important; }
         #error-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px; display: none; z-index: 2000; text-align: center; }
@@ -71,26 +56,6 @@
             </a>
             <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
         </div>
-
-        <!-- ПАНЕЛЬ КАЛИБРОВКИ -->
-        <div class="calibration-ui" id="calib-ui" style="opacity: 0.5; transition: 0.3s;">
-            <h3>Режим калибровки</h3>
-            <p>1. Свайпай по экрану, чтобы двигать (X / Y).</p>
-            <div class="val-display" id="pos-val">Pos: X: -0.050, Y: 0.000</div>
-            
-            <p style="margin-top: 5px;">2. Масштаб (Scale):</p>
-            <div class="val-display" id="scale-val">Scale: 0.015</div>
-            <!-- Диапазон центрирован возле 0.015 -->
-            <input type="range" id="scale-slider" min="0.001" max="0.05" step="0.001" value="0.015">
-
-            <p style="margin-top: 5px;">3. Поворот модели:</p>
-            <div class="val-display" id="rot-val">Rot: X: 0, Y: -90, Z: 0</div>
-            <div class="rot-btn-group">
-                <button class="rot-btn" id="btn-rot-x">X +90°</button>
-                <button class="rot-btn" id="btn-rot-y">Y +90°</button>
-                <button class="rot-btn" id="btn-rot-z">Z +90°</button>
-            </div>
-        </div>
     </div>
 
     <!-- Фильтры сглаживания -->
@@ -109,19 +74,22 @@
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- Обертка калибровки: масштаб стартует с 0.015 -->
-            <a-entity id="adjustable-wrapper" position="-0.05 0 0" scale="0.015 0.015 0.015">
+            <!-- Обертка с примененными настройками калибровки -->
+            <!-- Position: X: -0.066, Y: 0.06, Z: 0 -->
+            <!-- Scale: 0.012 -->
+            <a-entity id="adjustable-wrapper" position="-0.066 0.06 0" scale="0.012 0.012 0.012">
                 
                 <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). -->
                 <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
                 <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
+                <!-- Поворот Z установлен на 270 (X: 0, Y: -90, Z: 270) -->
                 <a-gltf-model 
                     id="case-model-entity"
                     src="#case-model" 
                     position="0 0 0" 
                     scale="1 1 1"
-                    rotation="0 -90 0">
+                    rotation="0 -90 270">
                 </a-gltf-model>
 
             </a-entity>
@@ -139,7 +107,6 @@
                 statusText.style.background = "rgba(0, 255, 150, 0.8)";
                 statusText.style.borderColor = "#00ff96";
                 statusText.style.color = "#000";
-                document.getElementById('calib-ui').style.opacity = '1';
             });
 
             target.addEventListener("targetLost", () => {
@@ -147,92 +114,24 @@
                 statusText.style.background = "rgba(0, 0, 0, 0.7)";
                 statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
                 statusText.style.color = "#fff";
-                document.getElementById('calib-ui').style.opacity = '0.5';
             });
         }
 
-        // ==========================================
-        // ЛОГИКА КАЛИБРОВКИ (МАСШТАБ, СВАЙП, ПОВОРОТ)
-        // ==========================================
-        const wrapper = document.querySelector('#adjustable-wrapper');
-        const modelEntity = document.querySelector('#case-model-entity');
-        
-        const scaleSlider = document.querySelector('#scale-slider');
-        const scaleValDisplay = document.querySelector('#scale-val');
-        const posValDisplay = document.querySelector('#pos-val');
-        const rotValDisplay = document.querySelector('#rot-val');
-
-        // Логика поворота
-        let currentRot = { x: 0, y: -90, z: 0 };
-
-        function updateRotation() {
-            modelEntity.setAttribute('rotation', `${currentRot.x} ${currentRot.y} ${currentRot.z}`);
-            rotValDisplay.innerText = `Rot: X: ${currentRot.x}, Y: ${currentRot.y}, Z: ${currentRot.z}`;
-        }
-
-        document.getElementById('btn-rot-x').addEventListener('click', () => { currentRot.x = (currentRot.x + 90) % 360; updateRotation(); });
-        document.getElementById('btn-rot-y').addEventListener('click', () => { currentRot.y = (currentRot.y + 90) % 360; updateRotation(); });
-        document.getElementById('btn-rot-z').addEventListener('click', () => { currentRot.z = (currentRot.z + 90) % 360; updateRotation(); });
-
-        // Обработка ползунка масштаба
-        scaleSlider.addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
-            wrapper.setAttribute('scale', `${val} ${val} ${val}`);
-            scaleValDisplay.innerText = `Scale: ${val.toFixed(3)}`;
-        });
-
-        // Обработка свайпа для перемещения
-        let isDragging = false;
-        let dragDistance = 0; 
-        let previousTouch = { x: 0, y: 0 };
-
-        document.body.addEventListener('touchstart', (e) => {
-            if(e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'button' || e.target.closest('a') || e.target.closest('.calibration-ui')) return;
+        // Автофокус при тапе (калибровка удалена, остался только полезный фокус)
+        document.body.addEventListener('click', async (e) => {
+            // Игнорируем клики по кнопкам, чтобы не сбивать навигацию
+            if(e.target.closest('a')) return;
             
-            isDragging = true;
-            dragDistance = 0;
-            previousTouch.x = e.touches[0].clientX;
-            previousTouch.y = e.touches[0].clientY;
-        }, {passive: false});
-
-        document.body.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - previousTouch.x;
-            const deltaY = touch.clientY - previousTouch.y;
-            
-            dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
-
-            // Чувствительность перемещения
-            const sensitivity = 0.001; 
-            const currentPos = wrapper.getAttribute('position');
-
-            const newX = currentPos.x + (deltaX * sensitivity);
-            const newY = currentPos.y - (deltaY * sensitivity); 
-
-            wrapper.setAttribute('position', { x: newX, y: newY, z: currentPos.z });
-            posValDisplay.innerText = `Pos: X: ${newX.toFixed(3)}, Y: ${newY.toFixed(3)}`;
-
-            previousTouch.x = touch.clientX;
-            previousTouch.y = touch.clientY;
-        }, {passive: false});
-
-        document.body.addEventListener('touchend', async (e) => {
-            isDragging = false;
-            
-            if (dragDistance < 15) {
-                try {
-                    const video = document.querySelector('video');
-                    if (video && video.srcObject) {
-                        const track = video.srcObject.getVideoTracks()[0];
-                        if (track && typeof track.applyConstraints === 'function') {
-                            await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-                        }
+            try {
+                const video = document.querySelector('video');
+                if (video && video.srcObject) {
+                    const track = video.srcObject.getVideoTracks()[0];
+                    if (track && typeof track.applyConstraints === 'function') {
+                        await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
                     }
-                } catch (err) {
-                    console.log("Автофокус не сработал");
                 }
+            } catch (err) {
+                console.log("Автофокус не сработал");
             }
         });
     </script>
