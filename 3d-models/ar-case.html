@@ -7,7 +7,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     
-    <!-- Откатили до стабильной версии 1.2.2, которая точно работала -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
@@ -24,8 +23,18 @@
         
         @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
         
-        #example-scanning-overlay { display: none !important; }
+        /* ВРЕМЕННАЯ ПАНЕЛЬ КАЛИБРОВКИ */
+        .calibration-ui {
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border: 1px solid #ff00ff;
+            padding: 15px 20px; border-radius: 20px; pointer-events: auto; color: white; display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3); margin-bottom: 20px;
+        }
+        .calibration-ui h3 { margin: 0 0 5px 0; font-size: 1rem; color: #ff00ff; text-transform: uppercase; }
+        .calibration-ui p { margin: 0; font-size: 0.75rem; color: #aaa; }
+        .calibration-ui .val-display { color: #00ffcc; font-size: 0.9rem; font-family: monospace; }
+        .calibration-ui input[type=range] { width: 100%; accent-color: #ff00ff; margin-top: 5px; }
 
+        #example-scanning-overlay { display: none !important; }
         #error-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px; display: none; z-index: 2000; text-align: center; }
     </style>
 
@@ -58,6 +67,17 @@
             </a>
             <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
         </div>
+
+        <!-- ПАНЕЛЬ КАЛИБРОВКИ (Временно для подгонки) -->
+        <div class="calibration-ui" id="calib-ui">
+            <h3>Режим калибровки</h3>
+            <p>1. Свайпай по экрану, чтобы двигать модель (X / Y).</p>
+            <div class="val-display" id="pos-val">Pos: X: -0.050, Y: 0.000</div>
+            
+            <p style="margin-top: 10px;">2. Ползунок масштаба (Размер):</p>
+            <div class="val-display" id="scale-val">Scale: 0.550</div>
+            <input type="range" id="scale-slider" min="0.05" max="1.5" step="0.01" value="0.55">
+        </div>
     </div>
 
     <a-scene 
@@ -75,16 +95,21 @@
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). -->
-            <a-box position="-0.05 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
+            <!-- Обертка калибровки: именно её мы будем двигать и масштабировать скриптом -->
+            <a-entity id="adjustable-wrapper" position="-0.05 0 0" scale="0.55 0.55 0.55">
+                
+                <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). Внутренние пропорции коробки сохранены -->
+                <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
-            <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-            <a-gltf-model 
-                src="#case-model" 
-                position="-0.05 0 0" 
-                scale="0.55 0.55 0.55"
-                rotation="0 0 0">
-            </a-gltf-model>
+                <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
+                <a-gltf-model 
+                    src="#case-model" 
+                    position="0 0 0" 
+                    scale="1 1 1"
+                    rotation="0 0 0">
+                </a-gltf-model>
+
+            </a-entity>
 
         </a-entity>
     </a-scene>
@@ -99,6 +124,8 @@
                 statusText.style.background = "rgba(0, 255, 150, 0.8)";
                 statusText.style.borderColor = "#00ff96";
                 statusText.style.color = "#000";
+                // Показываем панель только когда коробка найдена
+                document.getElementById('calib-ui').style.opacity = '1';
             });
 
             target.addEventListener("targetLost", () => {
@@ -106,24 +133,80 @@
                 statusText.style.background = "rgba(0, 0, 0, 0.7)";
                 statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
                 statusText.style.color = "#fff";
+                document.getElementById('calib-ui').style.opacity = '0.5';
             });
         }
 
-        // БЕЗОПАСНЫЙ автофокус только по тапу экрана (чтобы не перегружать видеопоток)
-        document.body.addEventListener('click', async () => {
-            try {
-                const video = document.querySelector('video');
-                if (video && video.srcObject) {
-                    const track = video.srcObject.getVideoTracks()[0];
-                    if (track && typeof track.applyConstraints === 'function') {
-                        const capabilities = track.getCapabilities();
-                        if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+        // ==========================================
+        // ЛОГИКА КАЛИБРОВКИ (МАСШТАБ И СВАЙП)
+        // ==========================================
+        const wrapper = document.querySelector('#adjustable-wrapper');
+        const scaleSlider = document.querySelector('#scale-slider');
+        const scaleValDisplay = document.querySelector('#scale-val');
+        const posValDisplay = document.querySelector('#pos-val');
+
+        // Обработка ползунка масштаба
+        scaleSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            wrapper.setAttribute('scale', `${val} ${val} ${val}`);
+            scaleValDisplay.innerText = `Scale: ${val.toFixed(3)}`;
+        });
+
+        // Обработка свайпа для перемещения (Touch Drag)
+        let isDragging = false;
+        let dragDistance = 0; // Для отличия тапа (фокус) от свайпа (перемещение)
+        let previousTouch = { x: 0, y: 0 };
+
+        document.body.addEventListener('touchstart', (e) => {
+            // Игнорируем нажатия на кнопки и ползунок
+            if(e.target.tagName.toLowerCase() === 'input' || e.target.closest('a')) return;
+            
+            isDragging = true;
+            dragDistance = 0;
+            previousTouch.x = e.touches[0].clientX;
+            previousTouch.y = e.touches[0].clientY;
+        }, {passive: false});
+
+        document.body.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - previousTouch.x;
+            const deltaY = touch.clientY - previousTouch.y;
+            
+            dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
+
+            // Чувствительность перемещения (чтобы не улетало резко)
+            const sensitivity = 0.001; 
+            const currentPos = wrapper.getAttribute('position');
+
+            // Вычисляем новую позицию
+            const newX = currentPos.x + (deltaX * sensitivity);
+            const newY = currentPos.y - (deltaY * sensitivity); // Минус, потому что координаты экрана инвертированы
+
+            wrapper.setAttribute('position', { x: newX, y: newY, z: currentPos.z });
+            posValDisplay.innerText = `Pos: X: ${newX.toFixed(3)}, Y: ${newY.toFixed(3)}`;
+
+            previousTouch.x = touch.clientX;
+            previousTouch.y = touch.clientY;
+        }, {passive: false});
+
+        document.body.addEventListener('touchend', async (e) => {
+            isDragging = false;
+            
+            // Если мы почти не двигали палец (это был обычный тап) -> пытаемся поймать автофокус
+            if (dragDistance < 15) {
+                try {
+                    const video = document.querySelector('video');
+                    if (video && video.srcObject) {
+                        const track = video.srcObject.getVideoTracks()[0];
+                        if (track && typeof track.applyConstraints === 'function') {
                             await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
                         }
                     }
+                } catch (err) {
+                    console.log("Автофокус не сработал");
                 }
-            } catch (err) {
-                console.warn("Фокус не поддерживается на этом устройстве");
             }
         });
     </script>
