@@ -23,6 +23,18 @@
         
         @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
 
+        /* ПАНЕЛЬ ОТЛАДКИ ПОВОРОТА */
+        .calibration-ui {
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border: 1px solid #ff00ff;
+            padding: 15px 20px; border-radius: 20px; pointer-events: auto; color: white; display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3); margin-bottom: 20px;
+        }
+        .calibration-ui h3 { margin: 0 0 5px 0; font-size: 1rem; color: #ff00ff; text-transform: uppercase; }
+        .calibration-ui .val-display { color: #00ffcc; font-size: 0.9rem; font-family: monospace; text-align: center; margin-bottom: 5px; }
+        .rot-btn-group { display: flex; gap: 10px; margin-top: 5px; }
+        .rot-btn { flex: 1; background: rgba(255, 0, 255, 0.2); border: 1px solid #ff00ff; color: #fff; padding: 10px 0; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .rot-btn:active { background: rgba(255, 0, 255, 0.6); }
+
         #example-scanning-overlay { display: none !important; }
         #error-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px; display: none; z-index: 2000; text-align: center; }
     </style>
@@ -56,6 +68,17 @@
             </a>
             <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
         </div>
+
+        <!-- ПАНЕЛЬ ОТЛАДКИ ПОВОРОТА (возвращена) -->
+        <div class="calibration-ui" id="calib-ui" style="opacity: 0.5; transition: 0.3s;">
+            <h3>Отладка поворота</h3>
+            <div class="val-display" id="rot-val">Rot: X: 270, Y: -90, Z: 90</div>
+            <div class="rot-btn-group">
+                <button class="rot-btn" id="btn-rot-x">X +90°</button>
+                <button class="rot-btn" id="btn-rot-y">Y +90°</button>
+                <button class="rot-btn" id="btn-rot-z">Z +90°</button>
+            </div>
+        </div>
     </div>
 
     <!-- Фильтры сглаживания -->
@@ -81,12 +104,13 @@
                 <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
                 <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-                <!-- ИСПРАВЛЕН ПОВОРОТ: 270 перенесено на ось X. (X: 270, Y: -90, Z: 0) -->
+                <!-- Повернута по Z на 90 градусов (X: 270, Y: -90, Z: 90) -->
                 <a-gltf-model 
+                    id="case-model-entity"
                     src="#case-model" 
                     position="0 0 0" 
                     scale="1 1 1"
-                    rotation="270 -90 0">
+                    rotation="270 -90 90">
                 </a-gltf-model>
 
             </a-entity>
@@ -104,6 +128,7 @@
                 statusText.style.background = "rgba(0, 255, 150, 0.8)";
                 statusText.style.borderColor = "#00ff96";
                 statusText.style.color = "#000";
+                document.getElementById('calib-ui').style.opacity = '1';
             });
 
             target.addEventListener("targetLost", () => {
@@ -111,13 +136,32 @@
                 statusText.style.background = "rgba(0, 0, 0, 0.7)";
                 statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
                 statusText.style.color = "#fff";
+                document.getElementById('calib-ui').style.opacity = '0.5';
             });
         }
 
+        // ==========================================
+        // ЛОГИКА ОТЛАДКИ ПОВОРОТА
+        // ==========================================
+        const modelEntity = document.querySelector('#case-model-entity');
+        const rotValDisplay = document.querySelector('#rot-val');
+        
+        // Обновленные стартовые значения из HTML
+        let currentRot = { x: 270, y: -90, z: 90 };
+
+        function updateRotation() {
+            modelEntity.setAttribute('rotation', `${currentRot.x} ${currentRot.y} ${currentRot.z}`);
+            rotValDisplay.innerText = `Rot: X: ${currentRot.x}, Y: ${currentRot.y}, Z: ${currentRot.z}`;
+        }
+
+        document.getElementById('btn-rot-x').addEventListener('click', () => { currentRot.x = (currentRot.x + 90) % 360; updateRotation(); });
+        document.getElementById('btn-rot-y').addEventListener('click', () => { currentRot.y = (currentRot.y + 90) % 360; updateRotation(); });
+        document.getElementById('btn-rot-z').addEventListener('click', () => { currentRot.z = (currentRot.z + 90) % 360; updateRotation(); });
+
         // Автофокус при тапе
         document.body.addEventListener('click', async (e) => {
-            // Игнорируем клики по ссылкам навигации
-            if(e.target.closest('a')) return;
+            // Игнорируем клики по кнопкам отладки и навигации
+            if(e.target.closest('button') || e.target.closest('a') || e.target.closest('.calibration-ui')) return;
             
             try {
                 const video = document.querySelector('video');
