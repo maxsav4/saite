@@ -1,26 +1,120 @@
-[
-    {
-        "id": "terea-ar-case",
-        "title": "TEREA AR Case (Tracking)",
-        "price": "350 ₴",
-        "status": "available",
-        "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
-        "customLink": "ar-case.html",
-        "customLinkText": "ПРИМЕРИТЬ В AR"
-    },
-    {
-        "id": "bear-01",
-        "title": "Cyber Bear",
-        "price": "500 ₴",
-        "status": "available",
-        "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
-    },
-    {
-        "id": "astro-01",
-        "title": "Astronaut Model",
-        "price": "800 ₴",
-        "status": "available",
-        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-        "image": ""
-    }
-]
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR Case Tracker | maxsav4</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+        /* ВАЖНО: background: transparent; позволяет видеть видео с камеры телефона! */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; font-family: 'Space Grotesk', sans-serif; }
+        
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+        
+        .back-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.5); color: #00ffcc; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        .status-box { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
+        
+        .scanner-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 160px; border: 2px dashed rgba(0, 255, 204, 0.7); border-radius: 12px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.2) inset; }
+        .scanner-frame::after { content: 'НАВЕДИТЕ НА КОРОБКУ TEREA'; position: absolute; bottom: -35px; left: 0; width: 100%; text-align: center; color: #00ffcc; font-size: 0.85rem; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        
+        @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
+        
+        /* Скрываем стандартный загрузчик MindAR */
+        #example-scanning-overlay { display: none !important; }
+    </style>
+
+    <script>
+        // Магия невидимости (Окклюзия): прячем коробку, оставляем чехол
+        AFRAME.registerComponent('occlusion-material', {
+            init: function () {
+                this.el.getObject3D('mesh').material.colorWrite = false;
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <!-- Интерфейс поверх камеры -->
+    <div class="ui-overlay">
+        <div class="header">
+            <a href="index.html" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                В КАТАЛОГ
+            </a>
+            <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
+        </div>
+        <div class="scanner-frame" id="scanner-ui"></div>
+    </div>
+
+    <!-- 
+        AR СЦЕНА 
+        Здесь подключается видео с камеры.
+    -->
+    <a-scene 
+        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true;" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- Сущность, привязанная к картинке из targets.mind -->
+        <a-entity id="target-box" mindar-image-target="targetIndex: 0">
+            
+            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия по форме пачки Terea) -->
+            <a-box position="0 0 0" scale="1.05 1.65 0.25" occlusion-material></a-box>
+
+            <!-- 2. ВИДИМЫЙ ЧЕХОЛ (Голограмма, пока нет 3D модели) -->
+            <a-box position="0 0 0" scale="1.1 1.7 0.3" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
+            <a-box position="0 0 0" scale="1.12 1.72 0.32" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
+
+            <!-- 
+                КОГДА СДЕЛАЕШЬ СВОЙ .GLB ФАЙЛ:
+                1. Раскомментируй <a-assets> ниже и укажи путь.
+                2. Удали <a-box> сверху.
+                3. Раскомментируй <a-gltf-model>.
+            -->
+            <!--
+            <a-assets>
+                <a-asset-item id="case-model" src="my_case.glb"></a-asset-item>
+            </a-assets>
+            <a-gltf-model src="#case-model" position="0 0 0" scale="1 1 1"></a-gltf-model>
+            -->
+
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const target = document.querySelector('#target-box');
+        const statusText = document.querySelector('#status-text');
+        const scannerUi = document.querySelector('#scanner-ui');
+
+        target.addEventListener("targetFound", event => {
+            statusText.innerText = "ЗАХВАТ УСПЕШЕН!";
+            statusText.style.background = "rgba(0, 255, 150, 0.8)";
+            statusText.style.borderColor = "#00ff96";
+            statusText.style.color = "#000";
+            scannerUi.style.borderColor = "rgba(0, 255, 150, 0.8)";
+            scannerUi.style.boxShadow = "0 0 40px rgba(0, 255, 150, 0.4) inset";
+        });
+
+        target.addEventListener("targetLost", event => {
+            statusText.innerText = "ПОИСК ЦЕЛИ...";
+            statusText.style.background = "rgba(0, 0, 0, 0.7)";
+            statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            statusText.style.color = "#fff";
+            scannerUi.style.borderColor = "rgba(0, 255, 204, 0.7)";
+            scannerUi.style.boxShadow = "0 0 40px rgba(0, 255, 204, 0.2) inset";
+        });
+    </script>
+</body>
+</html>
