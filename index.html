@@ -2,392 +2,297 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro-Maker Hub | maxsav4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Models | maxsav4</title>
     <style>
         /* === БАЗОВЫЕ СТИЛИ И ФОН === */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html {
-            width: 100%; height: 100vh;
-            overflow: hidden; /* Строго без прокрутки */
-            background-color: #030305; /* Глубокий темный фон */
-            font-family: 'Segoe UI', Roboto, sans-serif;
+        body {
+            background-color: #030305;
             color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 200, 255, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 0, 200, 0.05), transparent 25%);
         }
 
-        /* === 3D ЛАВА ЛАМПА (SVG ФИЛЬТР + CANVAS) === */
-        #lava-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 0; /* Строго позади контента */
-            pointer-events: none; /* Чтобы не мешало нажимать на кнопки */
-            filter: url(#liquid-goo); /* Применяем SVG магию перетекания */
+        /* === ШАПКА === */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 5%;
+            background: rgba(3, 3, 5, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        canvas {
-            display: block;
-            width: 100%; height: 100%;
+        
+        .back-btn {
+            color: #888;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        .back-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.1); transform: translateX(-5px); }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: 800;
         }
 
-        /* === ИНТЕРФЕЙС === */
-        .main-wrapper {
+        /* === КАТАЛОГ СЕТКА PINTEREST STYLE (MASONRY) === */
+        .catalog-container {
+            padding: 40px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            /* Настройки Pinterest-колонок */
+            column-count: 4;
+            column-gap: 25px;
+        }
+
+        /* Адаптивность колонок */
+        @media (max-width: 1200px) { .catalog-container { column-count: 3; } }
+        @media (max-width: 900px) { .catalog-container { column-count: 2; } }
+        @media (max-width: 500px) { .catalog-container { column-count: 1; } }
+
+        /* === КАРТОЧКА ТОВАРА === */
+        .product-card {
+            break-inside: avoid; /* Чтобы карточка не разрывалась между колонками */
+            margin-bottom: 25px;
             position: relative;
-            z-index: 10; /* Поверх лавы */
+            border-radius: 24px;
+            overflow: hidden;
+            background: #111;
+            cursor: pointer;
+            transform: translateZ(0); /* Аппаратное ускорение */
+        }
+        
+        .product-image {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        /* Статус (в наличии / под заказ) */
+        .status-badge {
+            position: absolute;
+            top: 15px; left: 15px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 2;
+        }
+        .status-available { background: rgba(0, 255, 100, 0.15); color: #00ff64; border: 1px solid rgba(0, 255, 100, 0.3); }
+        .status-order { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+
+        /* === ИНФОРМАЦИОННАЯ ПАНЕЛЬ (ПОЯВЛЯЕТСЯ ПРИ НАВЕДЕНИИ) === */
+        .product-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
+            padding: 40px 20px 20px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            height: 100vh;
-            padding: 20px;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+            gap: 10px;
+            opacity: 0; /* Скрыто по умолчанию на ПК */
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 2;
+        }
+        
+        .product-card:hover .product-overlay {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        .glass-header h1 {
-            text-align: center;
-            letter-spacing: 6px;
-            font-size: 1.8rem;
-            margin: 20px 0 5px;
-            font-weight: 800;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-            text-transform: uppercase;
-        }
-        .glass-header p {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #aaa;
-            letter-spacing: 2px;
-        }
-
-        /* === СЕТКА И КАРТОЧКИ === */
-        .container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr; /* Строго 1 колонка всегда */
-            gap: 20px;
-            width: 100%;
-            max-width: 400px; /* Ограничиваем ширину для красоты */
-        }
-
-        .glass-card {
-            background: rgba(20, 20, 25, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
-            padding: 20px 25px;
-            text-align: center;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .glass-card::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: 0.5s;
-        }
-        .glass-card:hover::before { left: 100%; }
-        .glass-card:hover { transform: translateX(10px) scale(1.02); } /* На ПК красивый сдвиг вправо при наведении */
-
-        /* Иконки и Текст */
-        .card-icon {
-            width: 50px; height: 50px;
-            margin-right: 20px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        .card-icon svg { width: 100%; height: 100%; fill: none; stroke-width: 1.5; }
-        .card-content { text-align: left; }
-        .card-content h3 { color: white; margin: 0 0 5px; font-size: 1.1rem; letter-spacing: 1px; }
-        .card-content p { color: #888; margin: 0; font-size: 0.8rem; }
-
-        /* Индивидуальные цвета при наведении */
-        .theme-3d:hover { box-shadow: 0 10px 40px rgba(0, 200, 255, 0.4); border-color: rgba(0, 200, 255, 0.4); }
-        .theme-3d svg { stroke: #00c8ff; }
-
-        .theme-visual:hover { box-shadow: 0 10px 40px rgba(255, 0, 200, 0.4); border-color: rgba(255, 0, 200, 0.4); }
-        .theme-visual svg { stroke: #ff00c8; }
-
-        .theme-electronics:hover { box-shadow: 0 10px 40px rgba(0, 255, 100, 0.4); border-color: rgba(0, 255, 100, 0.4); }
-        .theme-electronics svg { stroke: #00ff64; }
-
-        /* === ПОДВАЛ И КНОПКИ === */
-        .glass-footer {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding-bottom: 20px;
-        }
-        .btn-contact {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .product-title {
+            font-size: 1.2rem;
+            margin: 0;
             color: #fff;
-            padding: 12px 25px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            backdrop-filter: blur(10px);
-            transition: 0.3s;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
-        .btn-contact:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-3px); }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
 
-        /* ПК Версия - Увеличиваем размеры, но сохраняем вертикальный список */
-        @media (min-width: 768px) {
-            .grid { max-width: 450px; gap: 25px; }
-            .glass-card { padding: 25px 30px; }
-            .glass-header h1 { font-size: 2.5rem; }
-            .card-icon { width: 60px; height: 60px; margin-right: 25px; }
-            .card-content h3 { font-size: 1.3rem; }
-            .card-content p { font-size: 0.9rem; }
+        /* Кнопка "Заказать в TG" */
+        .btn-order {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-order:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* Индикатор загрузки */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #888;
+            font-size: 1.2rem;
+            column-span: all;
+        }
+
+        /* Для мобильных устройств делаем панель всегда слегка видимой */
+        @media (max-width: 900px) {
+            .product-overlay {
+                opacity: 1;
+                transform: translateY(0);
+                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 70%, transparent 100%);
+                padding-top: 50px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- Скрытый SVG фильтр для эффекта 3D перетекания (Metaballs) -->
-    <svg style="position: absolute; width: 0; height: 0;">
-        <filter id="liquid-goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -12" result="goo" />
-            <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000" flood-opacity="0.7" result="shadow" />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-        </filter>
-    </svg>
+    <header class="header">
+        <a href="../index.html" class="back-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            BACK
+        </a>
+        <h1>3D MODELS</h1>
+        <div style="width: 80px;"></div>
+    </header>
 
-    <!-- Холст Лава-лампы -->
-    <div id="lava-container">
-        <canvas id="lava-canvas"></canvas>
-    </div>
+    <main class="catalog-container" id="catalog">
+        <div class="loading">Загрузка проектов...</div>
+    </main>
 
-    <!-- Основной интерфейс -->
-    <div class="main-wrapper">
-        <header class="glass-header">
-            <h1>MAXSAV4</h1>
-            <p>ENGINEERING & VISUAL ART</p>
-        </header>
-
-        <main class="container">
-            <div class="grid">
-                
-                <!-- 3D Модели -->
-                <a href="https://github.com/maxsav4/saite/tree/main/3d-models" class="glass-card theme-3d">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M12 2C8 2 5 5 5 9C5 10.5 5.5 11.8 6.2 13C5 14.5 3 16 3 19V21H21V19C21 16 19 14.5 17.8 13C18.5 11.8 19 10.5 19 9C19 5 16 2 12 2Z" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="8.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
-                            <circle cx="15.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
-                            <path d="M12 14C11 14 10 15 10 16H14C14 15 13 14 12 14Z" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 9C3 9 2 8 2 6C2 5 3 4 5 5" stroke-linecap="round"/>
-                            <path d="M19 9C21 9 22 8 22 6C22 5 21 4 19 5" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <div class="card-content">
-                        <h3>3D MODELS</h3>
-                        <p>Printable & Arts</p>
-                    </div>
-                </a>
-
-                <!-- Визуал -->
-                <a href="https://github.com/maxsav4/saite/tree/main/visual-mapping" class="glass-card theme-visual">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" stroke="currentColor">
-                            <rect x="3" y="8" width="14" height="8" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="12" cy="12" r="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M17 10L22 6M17 14L22 18M18 12H23" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M6 16V18M10 16V18" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="card-content">
-                        <h3>MAPPING</h3>
-                        <p>Lasers & Projections</p>
-                    </div>
-                </a>
-
-                <!-- Электроника -->
-                <a href="https://github.com/maxsav4/saite/tree/main/electronics" class="glass-card theme-electronics">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" stroke="currentColor">
-                            <rect x="5" y="5" width="14" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 2V5M12 2V5M16 2V5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 19V22M12 19V22M16 19V22" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M2 8H5M2 12H5M2 16H5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M19 8H22M19 12H22M19 16H22" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="9" cy="9" r="0.5" fill="currentColor"/>
-                            <circle cx="15" cy="15" r="0.5" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div class="card-content">
-                        <h3>ELECTRONICS</h3>
-                        <p>ESP32 & Hardware</p>
-                    </div>
-                </a>
-
-            </div>
-        </main>
-
-        <footer class="glass-footer">
-            <a href="https://instagram.com/maxsav4" class="btn-contact">INSTAGRAM</a>
-            <a href="https://t.me/maxsav4" class="btn-contact">TELEGRAM</a>
-            <a href="https://github.com/maxsav4" class="btn-contact">GITHUB</a>
-        </footer>
-    </div>
-
-    <!-- === ФИЗИКА ЛАВЫ === -->
     <script>
-        const canvas = document.getElementById('lava-canvas');
-        const ctx = canvas.getContext('2d');
-        
-        let width, height;
-        let blobs = [];
-        
-        // Палитра киберпанк/неон
-        const colors = ['#00c8ff', '#ff00c8', '#7b00ff', '#00ff64'];
-        
-        let mouse = { x: -1000, y: -1000 };
-        let gyro = { x: 0, y: 0 };
-        let currentGravity = { x: 0, y: 0 };
+        const catalogContainer = document.getElementById('catalog');
+        const telegramUsername = 'maxsav4';
 
-        function init() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            blobs = [];
+        async function loadCatalog() {
+            let products = [];
             
-            const isMobile = width < 768;
-            const blobCount = isMobile ? 10 : 15;
-            
-            for (let i = 0; i < blobCount; i++) {
-                blobs.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    vx: 0, // Интерактивная скорость (мышь, столкновения)
-                    vy: 0,
-                    // Постоянная базовая скорость (дрейф), чтобы они никогда не останавливались
-                    baseVx: (Math.random() - 0.5) * 1.5,
-                    baseVy: (Math.random() - 0.5) * 1.5,
-                    baseSize: Math.random() * (isMobile ? 70 : 110) + 50,
-                    phase: Math.random() * Math.PI * 2, // Для анимации "дыхания" формы
-                    color: colors[i % colors.length]
-                });
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, width, height);
-            
-            // Плавное применение гироскопа
-            currentGravity.x += (gyro.x - currentGravity.x) * 0.05;
-            currentGravity.y += (gyro.y - currentGravity.y) * 0.05;
-
-            // Время для органических пульсаций
-            let time = Date.now() * 0.0005;
-
-            // Сначала вычисляем взаимное отталкивание пузырей
-            for (let i = 0; i < blobs.length; i++) {
-                for (let j = i + 1; j < blobs.length; j++) {
-                    let b1 = blobs[i];
-                    let b2 = blobs[j];
-                    
-                    let dx = b1.x - b2.x;
-                    let dy = b1.y - b2.y;
-                    let dist = Math.sqrt(dx*dx + dy*dy);
-                    
-                    // Дистанция отталкивания зависит от размеров
-                    let minDist = (b1.baseSize + b2.baseSize) * 0.75; 
-                    
-                    // Если пузыри подошли слишком близко - они мягко отталкивают друг друга
-                    if (dist < minDist && dist > 0) {
-                        let force = (minDist - dist) / dist * 0.02; // Мягкая сила пружины
-                        b1.vx += dx * force;
-                        b1.vy += dy * force;
-                        b2.vx -= dx * force;
-                        b2.vy -= dy * force;
+            try {
+                // Пытаемся загрузить реальный файл (сработает на GitHub Pages)
+                const response = await fetch('catalog.json');
+                if (!response.ok) throw new Error('Файл не найден');
+                products = await response.json();
+            } catch (error) {
+                console.warn("Используем демо-данные для предпросмотра:", error);
+                // Фолбэк-данные, если скрипт запущен локально без сервера или в предпросмотре
+                products = [
+                    {
+                        "id": "bear-01",
+                        "title": "Cyber Bear (Low Poly)",
+                        "price": "500 ₴",
+                        "status": "available",
+                        "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
+                    },
+                    {
+                        "id": "skull-02",
+                        "title": "Anatomy Skull Stand",
+                        "price": "750 ₴",
+                        "status": "order",
+                        "image": "https://images.unsplash.com/photo-1594953934789-fce2a3f7ffec?auto=format&fit=crop&q=80&w=600&h=400"
+                    },
+                    {
+                        "id": "lamp-03",
+                        "title": "Neon Grid Lamp",
+                        "price": "1200 ₴",
+                        "status": "available",
+                        "image": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=600&h=900"
+                    },
+                    {
+                        "id": "mech-04",
+                        "title": "Mecha Parts Kit",
+                        "price": "от 300 ₴",
+                        "status": "order",
+                        "image": "https://images.unsplash.com/photo-1537151377170-9c19a791bbea?auto=format&fit=crop&q=80&w=600&h=600"
+                    },
+                    {
+                        "id": "controller-05",
+                        "title": "Custom ESP Case",
+                        "price": "400 ₴",
+                        "status": "available",
+                        "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600&h=500"
                     }
-                }
+                ];
             }
+            
+            catalogContainer.innerHTML = ''; 
 
-            blobs.forEach(blob => {
-                // Влияние мыши (мягкое притяжение, без резкого слипания в точку)
-                let dxMouse = mouse.x - blob.x;
-                let dyMouse = mouse.y - blob.y;
-                let distMouse = Math.sqrt(dxMouse*dxMouse + dyMouse*dyMouse);
-                if (distMouse < 400 && distMouse > 50) { // Не тянем в самый центр мыши
-                    blob.vx += (dxMouse / distMouse) * 0.2;
-                    blob.vy += (dyMouse / distMouse) * 0.2;
-                }
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
 
-                // Органическое "плавание" (помогает избежать замирания)
-                let organicVx = Math.cos(time + blob.phase) * 0.5;
-                let organicVy = Math.sin(time + blob.phase) * 0.5;
+                const isAvailable = product.status === 'available';
+                const statusClass = isAvailable ? 'status-available' : 'status-order';
+                const statusText = isAvailable ? 'В НАЛИЧИИ' : 'ПОД ЗАКАЗ';
 
-                // Применяем ВСЕ силы к позиции (базовый дрейф не гасится трением!)
-                blob.x += blob.vx + blob.baseVx + organicVx + currentGravity.x;
-                blob.y += blob.vy + blob.baseVy + organicVy + currentGravity.y;
+                const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
+                const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
 
-                // === БЕСКОНЕЧНЫЙ ПОТОК (Wrap-around) ===
-                const margin = blob.baseSize * 1.5;
-                if (blob.x < -margin) blob.x = width + margin;
-                else if (blob.x > width + margin) blob.x = -margin;
-                
-                if (blob.y < -margin) blob.y = height + margin;
-                else if (blob.y > height + margin) blob.y = -margin;
+                const imgSrc = product.image ? product.image : 'https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600';
 
-                // Трение гасит ТОЛЬКО интерактивные силы (от мыши и столкновений)
-                blob.vx *= 0.94;
-                blob.vy *= 0.94;
-
-                // Динамический размер (эффект "дыхания" и проминания)
-                let currentSize = blob.baseSize + Math.sin(Date.now() * 0.002 + blob.phase) * 10;
-
-                // Отрисовка
-                const grad = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, currentSize);
-                grad.addColorStop(0, blob.color);
-                grad.addColorStop(1, 'transparent');
-
-                ctx.beginPath();
-                ctx.arc(blob.x, blob.y, currentSize, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
-                ctx.fill();
+                card.innerHTML = `
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">
+                    
+                    <div class="product-overlay">
+                        <h3 class="product-title">${product.title}</h3>
+                        <div class="price-row">
+                            <span class="product-price">${product.price}</span>
+                            <a href="${tgLink}" target="_blank" class="btn-order">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                ЗАКАЗАТЬ
+                            </a>
+                        </div>
+                    </div>
+                `;
+                catalogContainer.appendChild(card);
             });
-
-            requestAnimationFrame(draw);
         }
 
-        // Отслеживание мыши - если мышь ушла, отправляем ее за пределы экрана
-        window.addEventListener('mousemove', e => { 
-            mouse.x = e.clientX; 
-            mouse.y = e.clientY; 
-        });
-        window.addEventListener('mouseout', () => { 
-            mouse.x = -1000; 
-            mouse.y = -1000; 
-        });
-        
-        let initialBeta = null;
-        window.addEventListener('deviceorientation', e => {
-            if (!e.gamma || !e.beta) return;
-            if (initialBeta === null) initialBeta = e.beta;
-            
-            gyro.x = Math.max(-15, Math.min(15, e.gamma * 0.15));
-            gyro.y = Math.max(-15, Math.min(15, (e.beta - initialBeta) * 0.15));
-        });
-
-        window.addEventListener('touchstart', () => { initialBeta = null; }, {passive: true});
-        window.addEventListener('resize', init);
-        
-        init(); 
-        draw();
+        loadCatalog();
     </script>
 </body>
 </html>
