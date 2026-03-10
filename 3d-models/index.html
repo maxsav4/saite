@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Models | maxsav4</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #050505; color: #fff; font-family: 'Outfit', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; animation: floatOrb 20s infinite alternate ease-in-out; opacity: 0.4; }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #00ffcc; }
+        .orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #ff00ff; animation-delay: -5s; }
+        .orb-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #ffaa00; animation-delay: -10s; filter: blur(120px); opacity: 0.2; }
+        @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10vw, 15vh) scale(1.2); } }
+
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 25px 5%; background: rgba(5, 5, 5, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 100; }
+        .back-btn { color: #aaa; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; background: rgba(255, 255, 255, 0.05); padding: 10px 20px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+        .back-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.15); transform: translateX(-5px); }
+        .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; letter-spacing: 2px; margin: 0; text-transform: uppercase; font-weight: 900; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8); }
+
+        .catalog-container { padding: 40px 5%; max-width: 1600px; margin: 0 auto; column-count: 4; column-gap: 30px; }
+        @media (max-width: 1400px) { .catalog-container { column-count: 3; } }
+        @media (max-width: 950px) { .catalog-container { column-count: 2; column-gap: 20px; } }
+        @media (max-width: 600px) { .catalog-container { column-count: 1; padding: 20px 5%; } }
+
+        .product-card { break-inside: avoid; margin-bottom: 30px; position: relative; border-radius: 20px; overflow: hidden; background: rgba(15, 15, 15, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.5); cursor: pointer; transform: translateZ(0); transition: border-color 0.4s; }
+        .product-card:hover { border-color: rgba(255, 255, 255, 0.3); }
+        .media-container { width: 100%; position: relative; background: #000; display: block; }
+        .product-image { width: 100%; display: block; object-fit: cover; transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        model-viewer { width: 100%; height: 400px; background-color: transparent; --poster-color: transparent; outline: none; }
+        .product-card:hover .product-image { transform: scale(1.03); }
+
+        .status-badge { position: absolute; top: 20px; left: 20px; padding: 8px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); text-transform: uppercase; letter-spacing: 2px; z-index: 5; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .status-available { background: rgba(0, 255, 150, 0.15); color: #00ff96; border: 1px solid rgba(0, 255, 150, 0.4); }
+        .status-order { background: rgba(255, 100, 255, 0.15); color: #ff64ff; border: 1px solid rgba(255, 100, 255, 0.4); }
+
+        .badge-3d { position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 5; }
+
+        .product-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%); padding: 50px 25px 25px; display: flex; flex-direction: column; gap: 12px; opacity: 0; transform: translateY(15px); transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); z-index: 10; pointer-events: none; }
+        .product-card:hover .product-overlay { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .product-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin: 0; color: #fff; line-height: 1.2; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .product-price { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 900; color: #fff; }
+        .btn-order { background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
+        .btn-order:hover { background: #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); transform: scale(1.05); }
+
+        @media (max-width: 950px) { .product-overlay { opacity: 1; transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 60%, transparent 100%); pointer-events: auto; } model-viewer { height: 350px; } }
+    </style>
+</head>
+<body>
+
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <header class="header">
+        <!-- ВАЖНО: Правильная кнопка назад (ведет в корень на визитку) -->
+        <a href="../index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            BACK
+        </a>
+        <h1>3D MODELS</h1>
+        <div style="width: 100px;"></div>
+    </header>
+
+    <main class="catalog-container" id="catalog"></main>
+
+    <script>
+        const catalogContainer = document.getElementById('catalog');
+        const telegramUsername = 'maxsav4';
+
+        async function loadCatalog() {
+            let products = [];
+            try {
+                const response = await fetch('catalog.json');
+                if (!response.ok) throw new Error('Файл не найден');
+                products = await response.json();
+            } catch (error) {
+                products = [
+                    { "id": "astro-01", "title": "Astronaut Model (3D)", "price": "800 ₴", "status": "available", "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb", "image": "" },
+                    { "id": "bear-01", "title": "Cyber Bear (Low Poly)", "price": "500 ₴", "status": "available", "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800" },
+                    { "id": "mech-04", "title": "Mecha Parts Kit", "price": "от 300 ₴", "status": "order", "image": "https://images.unsplash.com/photo-1537151377170-9c19a791bbea?auto=format&fit=crop&q=80&w=600&h=600" }
+                ];
+            }
+            
+            catalogContainer.innerHTML = ''; 
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                const isAvailable = product.status === 'available';
+                const statusClass = isAvailable ? 'status-available' : 'status-order';
+                const statusText = isAvailable ? 'В НАЛИЧИИ' : 'ПОД ЗАКАЗ';
+                const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
+                const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
+
+                let mediaHTML = '';
+                if (product.model) {
+                    mediaHTML = `<div class="badge-3d"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><model-viewer src="${product.model}" auto-rotate rotation-per-second="30deg" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>`;
+                } else {
+                    const imgSrc = product.image ? product.image : 'https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600';
+                    mediaHTML = `<img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">`;
+                }
+
+                card.innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span><div class="media-container">${mediaHTML}</div><div class="product-overlay"><h3 class="product-title">${product.title}</h3><div class="price-row"><span class="product-price">${product.price}</span><a href="${tgLink}" target="_blank" class="btn-order"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>ЗАКАЗАТЬ</a></div></div>`;
+                catalogContainer.appendChild(card);
+            });
+            initGyroAndIdleLogic();
+        }
+
+        function initGyroAndIdleLogic() {
+            let lastMoveTime = Date.now(), isIdle = true, lastGamma = 0, lastBeta = 0;
+            const viewers = document.querySelectorAll('model-viewer');
+
+            setInterval(() => {
+                if (Date.now() - lastMoveTime > 5000 && !isIdle) {
+                    isIdle = true; viewers.forEach(v => v.setAttribute('auto-rotate', 'true'));
+                }
+            }, 1000);
+
+            window.addEventListener('touchstart', () => {
+                lastMoveTime = Date.now();
+                if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); }
+            }, {passive: true});
+
+            window.addEventListener('deviceorientation', (e) => {
+                if (!e.gamma || !e.beta) return;
+                const delta = Math.abs(e.gamma - lastGamma) + Math.abs(e.beta - lastBeta);
+                if (delta > 1.5) {
+                    lastMoveTime = Date.now(); lastGamma = e.gamma; lastBeta = e.beta;
+                    if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); }
+                    viewers.forEach(v => {
+                        const theta = e.gamma * 1.5, phi = 75 + (e.beta - 45); 
+                        v.cameraOrbit = `${theta}deg ${phi}deg auto`;
+                    });
+                }
+            });
+        }
+        loadCatalog();
+    </script>
+</body>
+</html>
