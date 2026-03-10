@@ -1,130 +1,26 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Case Tracker | maxsav4</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-    
-    <!-- Используем стабильные версии A-Frame и MindAR -->
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Space Grotesk', sans-serif; }
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
-        .header { display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
-        .back-btn { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.4); color: #00ffcc; padding: 10px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; text-transform: uppercase; }
-        .status-box { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; }
-        .scanner-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 150px; border: 2px dashed rgba(0, 255, 204, 0.5); border-radius: 10px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2) inset; }
-        .scanner-frame::after { content: 'НАВЕДИТЕ НА КОРОБКУ'; position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center; color: rgba(0, 255, 204, 0.8); font-size: 0.8rem; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.5); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.5); } }
-        #example-scanning-overlay { display: none !important; }
-        .a-loader-title { color: #00ffcc !important; }
-    </style>
-
-    <script>
-        // Компонент для создания "дырки" в виртуальном мире (Окклюзия)
-        AFRAME.registerComponent('occlusion-material', {
-            init: function () {
-                // colorWrite: false означает "рисуй форму, но не рисуй цвет"
-                this.el.getObject3D('mesh').material.colorWrite = false;
-            }
-        });
-    </script>
-</head>
-<body>
-
-    <div class="ui-overlay">
-        <div class="header">
-            <a href="index.html" class="back-btn">НАЗАД В КАТАЛОГ</a>
-            <div class="status-box" id="status-text">Сканирование...</div>
-        </div>
-        <div class="scanner-frame" id="scanner-ui"></div>
-    </div>
-
-    <!-- 
-        Настройки сцены для максимальной плавности:
-        - filterMinCF / filterBeta: Встроенные фильтры MindAR для сглаживания дрожания.
-        - antialias: true: Убирает "лесенки" на краях моделей.
-    -->
-    <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.01;" 
-        color-space="sRGB" 
-        renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; highRefreshRate: true;" 
-        vr-mode-ui="enabled: false" 
-        device-orientation-permission-ui="enabled: false">
-        
-        <a-assets>
-            <!-- Сюда потом подключишь свою реальную 3D модель чехла (.glb) -->
-            <!-- <a-asset-item id="case-model" src="models/my_case.glb"></a-asset-item> -->
-        </a-assets>
-
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <!-- 
-            ЦЕЛЬ ТРЕКИНГА (targetIndex: 0 - это задняя стенка коробки) 
-        -->
-        <a-entity id="target-box" mindar-image-target="targetIndex: 0">
-            
-            <!-- 
-                1. МАСКА ОККЛЮЗИИ (Невидимая коробка)
-                Её размеры (scale) подобраны примерно под пачку сигарет.
-                Она перекрывает реальный объект.
-            -->
-            <a-box 
-                position="0 0 0" 
-                scale="1.05 1.65 0.25" 
-                occlusion-material>
-            </a-box>
-
-            <!-- 
-                2. ВИДИМЫЙ ЧЕХОЛ (Пока что это полупрозрачный синий куб)
-                Он чуть больше маски, поэтому "обнимает" её.
-            -->
-            <a-box 
-                position="0 0 0" 
-                scale="1.1 1.7 0.3"
-                color="#00eeff" 
-                material="opacity: 0.4; transparent: true; metalness: 0.8; roughness: 0.2;"
-                animation="property: material.opacity; dir: alternate; dur: 1500; loop: true; to: 0.6">
-            </a-box>
-            
-            <!-- Красивая неоновая рамка вокруг чехла -->
-            <a-box 
-                position="0 0 0" 
-                scale="1.12 1.72 0.32"
-                material="wireframe: true; color: #00ffcc; opacity: 0.8;">
-            </a-box>
-
-            <!-- 
-                КОГДА БУДЕТ ГОТОВА ТВОЯ МОДЕЛЬ:
-                Удали все <a-box> выше и раскомментируй эту строку:
-                <a-gltf-model src="#case-model" position="0 0 0" scale="1 1 1"></a-gltf-model>
-            -->
-        </a-entity>
-    </a-scene>
-
-    <script>
-        // Простой скрипт для смены статуса в интерфейсе
-        const target = document.querySelector('#target-box');
-        const statusText = document.querySelector('#status-text');
-        const scannerUi = document.querySelector('#scanner-ui');
-
-        target.addEventListener("targetFound", event => {
-            statusText.innerText = "Объект найден!";
-            statusText.style.background = "rgba(0, 255, 150, 0.6)";
-            statusText.style.borderColor = "#00ff96";
-            scannerUi.style.borderColor = "rgba(0, 255, 150, 0.8)";
-        });
-
-        target.addEventListener("targetLost", event => {
-            statusText.innerText = "Сканирование...";
-            statusText.style.background = "";
-            statusText.style.borderColor = "";
-            scannerUi.style.borderColor = "";
-        });
-    </script>
-</body>
-</html>
+[
+    {
+        "id": "terea-ar-case",
+        "title": "TEREA AR Case (Tracking)",
+        "price": "350 ₴",
+        "status": "available",
+        "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
+        "customLink": "ar-case.html",
+        "customLinkText": "ПРИМЕРИТЬ В AR"
+    },
+    {
+        "id": "bear-01",
+        "title": "Cyber Bear",
+        "price": "500 ₴",
+        "status": "available",
+        "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
+    },
+    {
+        "id": "astro-01",
+        "title": "Astronaut Model",
+        "price": "800 ₴",
+        "status": "available",
+        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+        "image": ""
+    }
+]
