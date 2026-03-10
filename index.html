@@ -271,7 +271,7 @@
                 blobs.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    vx: 0,
+                    vx: 0, // Интерактивная скорость (мышь, столкновения)
                     vy: 0,
                     // Постоянная базовая скорость (дрейф), чтобы они никогда не останавливались
                     baseVx: (Math.random() - 0.5) * 1.5,
@@ -289,6 +289,9 @@
             // Плавное применение гироскопа
             currentGravity.x += (gyro.x - currentGravity.x) * 0.05;
             currentGravity.y += (gyro.y - currentGravity.y) * 0.05;
+
+            // Время для органических пульсаций
+            let time = Date.now() * 0.0005;
 
             // Сначала вычисляем взаимное отталкивание пузырей
             for (let i = 0; i < blobs.length; i++) {
@@ -315,10 +318,6 @@
             }
 
             blobs.forEach(blob => {
-                // Поддерживаем постоянное движение (добавляем базовую скорость)
-                blob.vx += blob.baseVx * 0.05;
-                blob.vy += blob.baseVy * 0.05;
-
                 // Влияние мыши (мягкое притяжение, без резкого слипания в точку)
                 let dxMouse = mouse.x - blob.x;
                 let dyMouse = mouse.y - blob.y;
@@ -328,9 +327,13 @@
                     blob.vy += (dyMouse / distMouse) * 0.2;
                 }
 
-                // Применяем скорости и гироскоп к позиции
-                blob.x += blob.vx + currentGravity.x;
-                blob.y += blob.vy + currentGravity.y;
+                // Органическое "плавание" (помогает избежать замирания)
+                let organicVx = Math.cos(time + blob.phase) * 0.5;
+                let organicVy = Math.sin(time + blob.phase) * 0.5;
+
+                // Применяем ВСЕ силы к позиции (базовый дрейф не гасится трением!)
+                blob.x += blob.vx + blob.baseVx + organicVx + currentGravity.x;
+                blob.y += blob.vy + blob.baseVy + organicVy + currentGravity.y;
 
                 // === БЕСКОНЕЧНЫЙ ПОТОК (Wrap-around) ===
                 const margin = blob.baseSize * 1.5;
@@ -340,7 +343,7 @@
                 if (blob.y < -margin) blob.y = height + margin;
                 else if (blob.y > height + margin) blob.y = -margin;
 
-                // Трение (не дает им разгоняться до бесконечности после отталкивания)
+                // Трение гасит ТОЛЬКО интерактивные силы (от мыши и столкновений)
                 blob.vx *= 0.94;
                 blob.vy *= 0.94;
 
