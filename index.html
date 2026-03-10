@@ -66,10 +66,10 @@
         }
         .grid {
             display: grid;
-            grid-template-rows: repeat(3, 1fr);
+            grid-template-columns: 1fr; /* Строго 1 колонка всегда */
             gap: 20px;
             width: 100%;
-            max-width: 900px;
+            max-width: 400px; /* Ограничиваем ширину для красоты */
         }
 
         .glass-card {
@@ -79,7 +79,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 24px;
-            padding: 25px;
+            padding: 20px 25px;
             text-align: center;
             text-decoration: none;
             display: flex;
@@ -97,13 +97,14 @@
             transition: 0.5s;
         }
         .glass-card:hover::before { left: 100%; }
-        .glass-card:hover { transform: translateY(-5px) scale(1.02); }
+        .glass-card:hover { transform: translateX(10px) scale(1.02); } /* На ПК красивый сдвиг вправо при наведении */
 
         /* Иконки и Текст */
         .card-icon {
             width: 50px; height: 50px;
             margin-right: 20px;
             display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
         .card-icon svg { width: 100%; height: 100%; fill: none; stroke-width: 1.5; }
         .card-content { text-align: left; }
@@ -142,13 +143,14 @@
         }
         .btn-contact:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-3px); }
 
-        /* ПК Версия */
+        /* ПК Версия - Увеличиваем размеры, но сохраняем вертикальный список */
         @media (min-width: 768px) {
-            .grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; max-width: 1200px; gap: 30px; }
-            .glass-card { flex-direction: column; text-align: center; padding: 40px 20px; }
-            .card-icon { margin-right: 0; margin-bottom: 20px; width: 70px; height: 70px; }
-            .card-content { text-align: center; }
+            .grid { max-width: 450px; gap: 25px; }
+            .glass-card { padding: 25px 30px; }
             .glass-header h1 { font-size: 2.5rem; }
+            .card-icon { width: 60px; height: 60px; margin-right: 25px; }
+            .card-content h3 { font-size: 1.3rem; }
+            .card-content p { font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -157,11 +159,8 @@
     <!-- Скрытый SVG фильтр для эффекта 3D перетекания (Metaballs) -->
     <svg style="position: absolute; width: 0; height: 0;">
         <filter id="liquid-goo">
-            <!-- Размываем объекты -->
             <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur" />
-            <!-- Увеличиваем контраст альфа-канала, чтобы склеить края -->
             <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -12" result="goo" />
-            <!-- Добавляем внутреннюю тень для объема (3D эффект) -->
             <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000" flood-opacity="0.7" result="shadow" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
         </filter>
@@ -182,11 +181,10 @@
         <main class="container">
             <div class="grid">
                 
-                <!-- 3D Модели (Иконка Мишки) -->
+                <!-- 3D Модели -->
                 <a href="https://github.com/maxsav4/saite/tree/main/3d-models" class="glass-card theme-3d">
                     <div class="card-icon">
                         <svg viewBox="0 0 24 24" stroke="currentColor">
-                            <!-- Стилизованная голова медведя (Low Poly стиль) -->
                             <path d="M12 2C8 2 5 5 5 9C5 10.5 5.5 11.8 6.2 13C5 14.5 3 16 3 19V21H21V19C21 16 19 14.5 17.8 13C18.5 11.8 19 10.5 19 9C19 5 16 2 12 2Z" stroke-linecap="round" stroke-linejoin="round"/>
                             <circle cx="8.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
                             <circle cx="15.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
@@ -201,11 +199,10 @@
                     </div>
                 </a>
 
-                <!-- Визуал (Иконка Проектора/Лазера) -->
+                <!-- Визуал -->
                 <a href="https://github.com/maxsav4/saite/tree/main/visual-mapping" class="glass-card theme-visual">
                     <div class="card-icon">
                         <svg viewBox="0 0 24 24" stroke="currentColor">
-                            <!-- Проектор и лучи -->
                             <rect x="3" y="8" width="14" height="8" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <circle cx="12" cy="12" r="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M17 10L22 6M17 14L22 18M18 12H23" stroke-linecap="round" stroke-linejoin="round"/>
@@ -218,17 +215,15 @@
                     </div>
                 </a>
 
-                <!-- Электроника (Иконка Платы с огоньками) -->
+                <!-- Электроника -->
                 <a href="https://github.com/maxsav4/saite/tree/main/electronics" class="glass-card theme-electronics">
                     <div class="card-icon">
                         <svg viewBox="0 0 24 24" stroke="currentColor">
-                            <!-- Микросхема -->
                             <rect x="5" y="5" width="14" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M8 2V5M12 2V5M16 2V5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M8 19V22M12 19V22M16 19V22" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M2 8H5M2 12H5M2 16H5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M19 8H22M19 12H22M19 16H22" stroke-linecap="round" stroke-linejoin="round"/>
-                            <!-- Огоньки (Точки внутри) -->
                             <circle cx="9" cy="9" r="0.5" fill="currentColor"/>
                             <circle cx="15" cy="15" r="0.5" fill="currentColor"/>
                         </svg>
@@ -269,9 +264,8 @@
             height = canvas.height = window.innerHeight;
             blobs = [];
             
-            // Создаем капли разных размеров
             const isMobile = width < 768;
-            const blobCount = isMobile ? 8 : 12; // На мобилках чуть меньше для идеальной плавности
+            const blobCount = isMobile ? 8 : 12;
             
             for (let i = 0; i < blobCount; i++) {
                 blobs.push({
@@ -279,26 +273,24 @@
                     y: Math.random() * height,
                     vx: (Math.random() - 0.5) * 2,
                     vy: (Math.random() - 0.5) * 2,
-                    baseSize: Math.random() * (isMobile ? 80 : 120) + 60, // Размер
+                    baseSize: Math.random() * (isMobile ? 80 : 120) + 60,
                     color: colors[i % colors.length]
                 });
             }
         }
 
         function draw() {
-            // Очищаем прозрачным (SVG фильтр наложит контраст сам)
             ctx.clearRect(0, 0, width, height);
             
-            // Плавное применение гравитации гироскопа
             currentGravity.x += (gyro.x - currentGravity.x) * 0.05;
             currentGravity.y += (gyro.y - currentGravity.y) * 0.05;
 
             blobs.forEach(blob => {
-                // Применяем скорости и гироскоп
+                // Движение с учетом скорости и гироскопа
                 blob.x += blob.vx + currentGravity.x;
                 blob.y += blob.vy + currentGravity.y;
 
-                // Взаимодействие с мышью (мягкое притяжение)
+                // Мягкое притяжение к мыши
                 let dx = mouse.x - blob.x;
                 let dy = mouse.y - blob.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
@@ -307,18 +299,26 @@
                     blob.y += dy * 0.005;
                 }
 
-                // Упругое отталкивание от краев экрана
-                const margin = 50;
-                if (blob.x < -margin) blob.vx += 0.2;
-                if (blob.x > width + margin) blob.vx -= 0.2;
-                if (blob.y < -margin) blob.vy += 0.2;
-                if (blob.y > height + margin) blob.vy -= 0.2;
+                // === БЕСКОНЕЧНЫЙ ПОТОК (Wrap-around) ===
+                // Если капля улетает далеко за экран, она плавно появляется с другой стороны
+                const margin = blob.baseSize + 20;
+                
+                if (blob.x < -margin) {
+                    blob.x = width + margin;
+                } else if (blob.x > width + margin) {
+                    blob.x = -margin;
+                }
+                
+                if (blob.y < -margin) {
+                    blob.y = height + margin;
+                } else if (blob.y > height + margin) {
+                    blob.y = -margin;
+                }
 
-                // Ограничение максимальной скорости
                 blob.vx *= 0.99;
                 blob.vy *= 0.99;
 
-                // Отрисовка капли (рисуем с радиальным градиентом для эффекта свечения)
+                // Отрисовка
                 const grad = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.baseSize);
                 grad.addColorStop(0, blob.color);
                 grad.addColorStop(1, 'transparent');
@@ -332,29 +332,24 @@
             requestAnimationFrame(draw);
         }
 
-        // Отслеживание мыши
         window.addEventListener('mousemove', e => { 
             mouse.x = e.clientX; 
             mouse.y = e.clientY; 
         });
         
-        // Чтобы на телефоне не улетало в угол, если взять криво — мы калибруем начальный угол
         let initialBeta = null;
         window.addEventListener('deviceorientation', e => {
             if (!e.gamma || !e.beta) return;
             
             if (initialBeta === null) initialBeta = e.beta;
             
-            // gamma - наклон влево/вправо (-90 до 90)
-            // beta - наклон вперед/назад 
-            gyro.x = Math.max(-10, Math.min(10, e.gamma * 0.15));
-            gyro.y = Math.max(-10, Math.min(10, (e.beta - initialBeta) * 0.15));
+            gyro.x = Math.max(-12, Math.min(12, e.gamma * 0.15));
+            gyro.y = Math.max(-12, Math.min(12, (e.beta - initialBeta) * 0.15));
         });
 
-        // Перекалибровка при долгом нажатии (если человек поменял позу)
         window.addEventListener('touchstart', () => { initialBeta = null; }, {passive: true});
-
         window.addEventListener('resize', init);
+        
         init(); 
         draw();
     </script>
