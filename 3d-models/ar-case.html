@@ -67,14 +67,15 @@
             
             <!-- 
                 1. НЕВИДИМАЯ ДЫРКА (Окклюзия)
-                Масштаб пересчитан под TEREA: X=0.95 (базовая ширина чуть меньше маркера), Y=0.61 (высота), Z=0.15 (глубина)
+                Масштаб пересчитан под физические пропорции пачки TEREA.
+                Ориентация исправлена на вертикальную.
             -->
-            <a-box position="0 0 0" scale="0.95 0.61 0.15" occlusion-material></a-box>
+            <a-box position="0 0 0" scale="1.0 1.54 0.31" occlusion-material></a-box>
 
             <!-- 2. ВИДИМЫЙ ЧЕХОЛ (Голограмма) -->
-            <!-- Чуть-чуть больше маски окклюзии, чтобы "обнимать" коробку -->
-            <a-box position="0 0 0" scale="0.98 0.63 0.17" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
-            <a-box position="0 0 0" scale="1.0 0.65 0.19" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
+            <!-- Чуть-чуть больше маски окклюзии, чтобы аккуратно обнимать коробку -->
+            <a-box position="0 0 0" scale="1.04 1.58 0.35" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
+            <a-box position="0 0 0" scale="1.06 1.60 0.37" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
 
             <!-- 
                 КОГДА СДЕЛАЕШЬ СВОЙ .GLB ФАЙЛ, ИСПОЛЬЗУЙ ЭТОТ КОД:
