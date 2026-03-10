@@ -2,119 +2,181 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Case Tracker | maxsav4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Models | maxsav4</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
     
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        /* ВАЖНО: background: transparent; позволяет видеть видео с камеры телефона! */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; font-family: 'Space Grotesk', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #050505; color: #fff; font-family: 'Outfit', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
         
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
+        img { pointer-events: none; -webkit-user-drag: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+
+        /* Красивые фоновые сферы */
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); z-index: -1; animation: floatOrb 25s infinite alternate ease-in-out; opacity: 0.35; pointer-events: none;}
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #00ffcc; }
+        .orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #ff00ff; animation-delay: -5s; }
+        .orb-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #ffaa00; animation-delay: -10s; filter: blur(120px); opacity: 0.15; }
+        @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10vw, 15vh) scale(1.2); } }
+
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 25px 5%; background: rgba(5, 5, 5, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 100; }
+        .back-btn { color: #aaa; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; background: rgba(255, 255, 255, 0.05); padding: 10px 20px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+        .back-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.15); transform: translateX(-5px); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; letter-spacing: 2px; margin: 0; text-transform: uppercase; font-weight: 900; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8); }
+
+        .catalog-container { padding: 40px 5%; max-width: 1600px; margin: 0 auto; column-count: 4; column-gap: 30px; }
+        @media (max-width: 1400px) { .catalog-container { column-count: 3; } }
+        @media (max-width: 950px) { .catalog-container { column-count: 2; column-gap: 20px; } }
+        @media (max-width: 600px) { .catalog-container { column-count: 1; padding: 20px 5%; } }
+
+        .product-card { break-inside: avoid; margin-bottom: 30px; position: relative; border-radius: 20px; overflow: hidden; background: rgba(15, 15, 15, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.5); cursor: pointer; transform: translateZ(0); transition: border-color 0.4s, transform 0.4s; }
+        .product-card:hover { border-color: rgba(0, 255, 204, 0.4); transform: translateY(-5px); box-shadow: 0 25px 50px rgba(0, 255, 204, 0.1); }
         
-        .header { display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+        .media-container { width: 100%; position: relative; background: #000; display: block; min-height: 250px; }
+        .product-image { width: 100%; display: block; object-fit: cover; transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
-        .back-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.5); color: #00ffcc; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        model-viewer { width: 100%; height: 400px; background-color: transparent; --poster-color: transparent; outline: none; }
+        .product-card:hover .product-image { transform: scale(1.03); }
+
+        .status-badge { position: absolute; top: 20px; left: 20px; padding: 8px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); text-transform: uppercase; letter-spacing: 2px; z-index: 5; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .status-available { background: rgba(0, 255, 150, 0.15); color: #00ff96; border: 1px solid rgba(0, 255, 150, 0.4); }
+        .status-order { background: rgba(255, 100, 255, 0.15); color: #ff64ff; border: 1px solid rgba(255, 100, 255, 0.4); }
+
+        .btn-viewer-ar {
+            position: absolute; top: 20px; right: 20px; background: rgba(0, 200, 255, 0.2); backdrop-filter: blur(15px); border: 1px solid rgba(0, 200, 255, 0.6); color: #00ffff; padding: 8px 15px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; z-index: 5; box-shadow: 0 0 15px rgba(0, 200, 255, 0.3); transition: 0.3s;
+        }
+        .btn-viewer-ar:hover { background: rgba(0, 200, 255, 0.4); box-shadow: 0 0 25px rgba(0, 200, 255, 0.6); }
+
+        .product-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%); padding: 50px 25px 25px; display: flex; flex-direction: column; gap: 12px; opacity: 0; transform: translateY(15px); transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); z-index: 10; pointer-events: none; }
+        .product-card:hover .product-overlay { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .product-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin: 0; color: #fff; line-height: 1.2; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .product-price { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 900; color: #fff; }
         
-        .status-box { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
-        
-        .scanner-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 160px; border: 2px dashed rgba(0, 255, 204, 0.7); border-radius: 12px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.2) inset; }
-        .scanner-frame::after { content: 'НАВЕДИТЕ НА КОРОБКУ TEREA'; position: absolute; bottom: -35px; left: 0; width: 100%; text-align: center; color: #00ffcc; font-size: 0.85rem; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        
-        @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
-        
-        /* Скрываем стандартный загрузчик MindAR */
-        #example-scanning-overlay { display: none !important; }
+        .btn-order { background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; letter-spacing: 1px; border: none;}
+        .btn-order:hover { background: #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); transform: scale(1.05); }
+
+        .btn-special { background: #00ffcc; color: #000; box-shadow: 0 0 15px rgba(0,255,204,0.4); }
+        .btn-special:hover { background: #fff; box-shadow: 0 0 25px rgba(0,255,204,0.7); }
+
+        @media (max-width: 950px) { .product-overlay { opacity: 1; transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 60%, transparent 100%); pointer-events: auto; } model-viewer { height: 350px; } }
     </style>
-
-    <script>
-        // Магия невидимости (Окклюзия): прячем коробку, оставляем чехол
-        AFRAME.registerComponent('occlusion-material', {
-            init: function () {
-                this.el.getObject3D('mesh').material.colorWrite = false;
-            }
-        });
-    </script>
 </head>
-<body>
+<body class="no-select" oncontextmenu="return false;">
 
-    <!-- Интерфейс поверх камеры -->
-    <div class="ui-overlay">
-        <div class="header">
-            <a href="index.html" class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                В КАТАЛОГ
-            </a>
-            <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
-        </div>
-        <div class="scanner-frame" id="scanner-ui"></div>
-    </div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
 
-    <!-- 
-        AR СЦЕНА 
-        Здесь подключается видео с камеры.
-    -->
-    <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
-        color-space="sRGB" 
-        renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true;" 
-        vr-mode-ui="enabled: false" 
-        device-orientation-permission-ui="enabled: false">
-        
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <header class="header">
+        <a href="../index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            НАЗАД
+        </a>
+        <h1>3D MODELS</h1>
+        <div style="width: 100px;"></div>
+    </header>
 
-        <!-- Сущность, привязанная к картинке из targets.mind -->
-        <a-entity id="target-box" mindar-image-target="targetIndex: 0">
-            
-            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия по форме пачки Terea) -->
-            <a-box position="0 0 0" scale="1.05 1.65 0.25" occlusion-material></a-box>
-
-            <!-- 2. ВИДИМЫЙ ЧЕХОЛ (Голограмма, пока нет 3D модели) -->
-            <a-box position="0 0 0" scale="1.1 1.7 0.3" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
-            <a-box position="0 0 0" scale="1.12 1.72 0.32" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
-
-            <!-- 
-                КОГДА СДЕЛАЕШЬ СВОЙ .GLB ФАЙЛ:
-                1. Раскомментируй <a-assets> ниже и укажи путь.
-                2. Удали <a-box> сверху.
-                3. Раскомментируй <a-gltf-model>.
-            -->
-            <!--
-            <a-assets>
-                <a-asset-item id="case-model" src="my_case.glb"></a-asset-item>
-            </a-assets>
-            <a-gltf-model src="#case-model" position="0 0 0" scale="1 1 1"></a-gltf-model>
-            -->
-
-        </a-entity>
-    </a-scene>
+    <main class="catalog-container" id="catalog"></main>
 
     <script>
-        const target = document.querySelector('#target-box');
-        const statusText = document.querySelector('#status-text');
-        const scannerUi = document.querySelector('#scanner-ui');
+        const catalogContainer = document.getElementById('catalog');
+        const telegramUsername = 'maxsav4';
 
-        target.addEventListener("targetFound", event => {
-            statusText.innerText = "ЗАХВАТ УСПЕШЕН!";
-            statusText.style.background = "rgba(0, 255, 150, 0.8)";
-            statusText.style.borderColor = "#00ff96";
-            statusText.style.color = "#000";
-            scannerUi.style.borderColor = "rgba(0, 255, 150, 0.8)";
-            scannerUi.style.boxShadow = "0 0 40px rgba(0, 255, 150, 0.4) inset";
-        });
+        async function loadCatalog() {
+            let products = [];
+            try {
+                const response = await fetch('catalog.json');
+                if (!response.ok) throw new Error('Файл не найден');
+                products = await response.json();
+            } catch (error) {
+                // Демо-данные, если JSON не загрузился
+                products = [
+                    { "id": "demo-01", "title": "Astronaut AR", "price": "800 ₴", "status": "available", "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb", "image": "" }
+                ];
+            }
+            
+            catalogContainer.innerHTML = ''; 
 
-        target.addEventListener("targetLost", event => {
-            statusText.innerText = "ПОИСК ЦЕЛИ...";
-            statusText.style.background = "rgba(0, 0, 0, 0.7)";
-            statusText.style.borderColor = "rgba(255, 255, 255, 0.2)";
-            statusText.style.color = "#fff";
-            scannerUi.style.borderColor = "rgba(0, 255, 204, 0.7)";
-            scannerUi.style.boxShadow = "0 0 40px rgba(0, 255, 204, 0.2) inset";
-        });
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+
+                const isAvailable = product.status === 'available';
+                const statusClass = isAvailable ? 'status-available' : 'status-order';
+                const statusText = isAvailable ? 'В НАЛИЧИИ' : 'ПОД ЗАКАЗ';
+
+                let mediaHTML = '';
+                if (product.model) {
+                    mediaHTML = `
+                        <model-viewer 
+                            src="${product.model}" 
+                            auto-rotate rotation-per-second="30deg" camera-controls interaction-prompt="none" 
+                            shadow-intensity="1" exposure="1.2"
+                            ar ar-modes="webxr scene-viewer quick-look" 
+                            ar-scale="fixed" ar-placement="floor"
+                            oncontextmenu="return false;">
+                            <button slot="ar-button" class="btn-viewer-ar">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg> AR
+                            </button>
+                        </model-viewer>`;
+                } else {
+                    const imgSrc = product.image ? product.image : 'https://via.placeholder.com/600';
+                    mediaHTML = `<img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">`;
+                }
+
+                // ЛОГИКА КНОПОК
+                let buttonHTML = '';
+                if (product.customLink) {
+                    buttonHTML = `
+                        <a href="${product.customLink}" class="btn-order btn-special">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+                            ${product.customLinkText || 'ПЕРЕЙТИ'}
+                        </a>`;
+                } else {
+                    const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
+                    const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
+                    buttonHTML = `
+                        <a href="${tgLink}" target="_blank" class="btn-order">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                            ЗАКАЗАТЬ
+                        </a>`;
+                }
+
+                card.innerHTML = `
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <div class="media-container">${mediaHTML}</div>
+                    <div class="product-overlay">
+                        <h3 class="product-title">${product.title}</h3>
+                        <div class="price-row">
+                            <span class="product-price">${product.price}</span>
+                            ${buttonHTML}
+                        </div>
+                    </div>
+                `;
+                catalogContainer.appendChild(card);
+            });
+            initGyroAndIdleLogic();
+        }
+
+        function initGyroAndIdleLogic() {
+            let lastMoveTime = Date.now(), isIdle = true, lastGamma = 0, lastBeta = 0;
+            const viewers = document.querySelectorAll('model-viewer');
+            setInterval(() => { if (Date.now() - lastMoveTime > 5000 && !isIdle) { isIdle = true; viewers.forEach(v => v.setAttribute('auto-rotate', 'true')); } }, 1000);
+            window.addEventListener('touchstart', () => { lastMoveTime = Date.now(); if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); } }, {passive: true});
+            window.addEventListener('deviceorientation', (e) => {
+                if (!e.gamma || !e.beta) return;
+                const delta = Math.abs(e.gamma - lastGamma) + Math.abs(e.beta - lastBeta);
+                if (delta > 1.5) { lastMoveTime = Date.now(); lastGamma = e.gamma; lastBeta = e.beta; if (isIdle) { isIdle = false; viewers.forEach(v => v.removeAttribute('auto-rotate')); } viewers.forEach(v => { const theta = e.gamma * 1.5, phi = 75 + (e.beta - 45); v.cameraOrbit = `${theta}deg ${phi}deg auto`; }); }
+            });
+        }
+        loadCatalog();
     </script>
 </body>
 </html>
