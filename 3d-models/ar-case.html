@@ -69,20 +69,23 @@
         </div>
 
         <!-- ПАНЕЛЬ КАЛИБРОВКИ (Временно для подгонки) -->
-        <div class="calibration-ui" id="calib-ui">
+        <div class="calibration-ui" id="calib-ui" style="opacity: 0.5; transition: 0.3s;">
             <h3>Режим калибровки</h3>
             <p>1. Свайпай по экрану, чтобы двигать модель (X / Y).</p>
             <div class="val-display" id="pos-val">Pos: X: -0.050, Y: 0.000</div>
             
             <p style="margin-top: 10px;">2. Ползунок масштаба (Размер):</p>
-            <div class="val-display" id="scale-val">Scale: 0.030</div>
-            <!-- Ползунок настроен на малые значения -->
-            <input type="range" id="scale-slider" min="0.01" max="0.1" step="0.001" value="0.03">
+            <div class="val-display" id="scale-val">Scale: 0.150</div>
+            <!-- Диапазон изменен под новые значения -->
+            <input type="range" id="scale-slider" min="0.05" max="0.5" step="0.005" value="0.15">
         </div>
     </div>
 
+    <!-- 
+        Изменил фильтры для более отзывчивого трекинга (filterMinCF: 0.001; filterBeta: 0.01)
+    -->
     <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
+        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.01;" 
         color-space="sRGB" 
         renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true;" 
         vr-mode-ui="enabled: false" 
@@ -96,19 +99,19 @@
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- Обертка калибровки: масштаб изменен на 0.03 по умолчанию -->
-            <a-entity id="adjustable-wrapper" position="-0.05 0 0" scale="0.03 0.03 0.03">
+            <!-- Обертка калибровки: базовый масштаб установлен на 0.15 -->
+            <a-entity id="adjustable-wrapper" position="-0.05 0 0" scale="0.15 0.15 0.15">
                 
-                <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). Внутренние пропорции коробки сохранены -->
+                <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). Внутренние пропорции коробки -->
                 <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
                 <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-                <!-- Повернута на 90 градусов по часовой стрелке по оси Y -->
+                <!-- ВСЕ ПОВОРОТЫ ОБНУЛЕНЫ (rotation="0 0 0") -->
                 <a-gltf-model 
                     src="#case-model" 
                     position="0 0 0" 
                     scale="1 1 1"
-                    rotation="0 -90 0">
+                    rotation="0 0 0">
                 </a-gltf-model>
 
             </a-entity>
@@ -126,7 +129,6 @@
                 statusText.style.background = "rgba(0, 255, 150, 0.8)";
                 statusText.style.borderColor = "#00ff96";
                 statusText.style.color = "#000";
-                // Показываем панель только когда коробка найдена
                 document.getElementById('calib-ui').style.opacity = '1';
             });
 
@@ -154,14 +156,13 @@
             scaleValDisplay.innerText = `Scale: ${val.toFixed(3)}`;
         });
 
-        // Обработка свайпа для перемещения (Touch Drag)
+        // Обработка свайпа для перемещения
         let isDragging = false;
-        let dragDistance = 0; // Для отличия тапа (фокус) от свайпа (перемещение)
+        let dragDistance = 0; 
         let previousTouch = { x: 0, y: 0 };
 
         document.body.addEventListener('touchstart', (e) => {
-            // Игнорируем нажатия на кнопки и ползунок
-            if(e.target.tagName.toLowerCase() === 'input' || e.target.closest('a')) return;
+            if(e.target.tagName.toLowerCase() === 'input' || e.target.closest('a') || e.target.closest('.calibration-ui')) return;
             
             isDragging = true;
             dragDistance = 0;
@@ -182,7 +183,6 @@
             const sensitivity = 0.001; 
             const currentPos = wrapper.getAttribute('position');
 
-            // Вычисляем новую позицию
             const newX = currentPos.x + (deltaX * sensitivity);
             const newY = currentPos.y - (deltaY * sensitivity); 
 
@@ -196,7 +196,7 @@
         document.body.addEventListener('touchend', async (e) => {
             isDragging = false;
             
-            // Если мы почти не двигали палец (это был обычный тап) -> пытаемся поймать автофокус
+            // Автофокус при легком тапе (дистанция свайпа меньше 15 пикселей)
             if (dragDistance < 15) {
                 try {
                     const video = document.querySelector('video');
