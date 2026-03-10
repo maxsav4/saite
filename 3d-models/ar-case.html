@@ -12,14 +12,22 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
+        /* ВАЖНО: background: transparent; позволяет видеть видео с камеры телефона! */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; font-family: 'Space Grotesk', sans-serif; }
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
-        .header { display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
-        .back-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.5); color: #00ffcc; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .status-box { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
-        @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
-        #example-scanning-overlay { display: none !important; }
         
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-sizing: border-box; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+        
+        .back-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.5); color: #00ffcc; padding: 12px 20px; border-radius: 30px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        .status-box { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 30px; color: #fff; font-size: 0.9rem; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(0,0,0,0.5);}
+        
+        @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
+        
+        /* Скрываем стандартный загрузчик MindAR */
+        #example-scanning-overlay { display: none !important; }
+
         /* Сообщение об ошибке, если камера недоступна */
         #error-message {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -29,7 +37,7 @@
     </style>
 
     <script>
-        // Компонент для создания эффекта окклюзии (невидимый материал)
+        // Окклюзия (создаем невидимую маску, чтобы чехол не просвечивал сквозь реальную пачку)
         AFRAME.registerComponent('occlusion-material', {
             init: function () {
                 const mesh = this.el.getObject3D('mesh');
@@ -55,16 +63,19 @@
 
     <div id="error-message"></div>
 
+    <!-- Интерфейс поверх камеры -->
     <div class="ui-overlay">
         <div class="header">
-            <a href="index.html" class="back-btn">В КАТАЛОГ</a>
+            <a href="index.html" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                В КАТАЛОГ
+            </a>
             <div class="status-box" id="status-text">ПОИСК ЦЕЛИ...</div>
         </div>
     </div>
 
     <!-- 
-        Настройки MindAR:
-        filterMinCF и filterBeta отвечают за сглаживание дрожания (тремора рук).
+        AR СЦЕНА 
     -->
     <a-scene 
         mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
@@ -73,23 +84,27 @@
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
         
+        <!-- ЗАГРУЗКА ТВОЕЙ 3D МОДЕЛИ -->
         <a-assets>
-            <a-asset-item id="case-model" src="terea1.glb"></a-asset-item>
+            <a-asset-item id="case-model" src="terea.glb"></a-asset-item>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+        <!-- Сущность, привязанная к картинке из targets.mind -->
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
-            <!-- Маска окклюзии: скрывает то, что за коробкой -->
+            
+            <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия) - Масштаб увеличен на 10%, смещение X -0.05 -->
             <a-box position="-0.05 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
 
-            <!-- 3D модель чехла -->
+            <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
             <a-gltf-model 
                 src="#case-model" 
                 position="-0.05 0 0" 
                 scale="1 1 1"
                 rotation="0 0 0">
             </a-gltf-model>
+
         </a-entity>
     </a-scene>
 
@@ -97,6 +112,7 @@
         const target = document.querySelector('#target-box');
         const statusText = document.querySelector('#status-text');
 
+        // Логика интерфейса при нахождении/потере цели
         if (target) {
             target.addEventListener("targetFound", () => {
                 statusText.innerText = "ЗАХВАТ УСПЕШЕН!";
@@ -113,25 +129,35 @@
             });
         }
 
-        // Безопасный автофокус: проверяем поддержку перед применением
+        // ==========================================
+        // УЛУЧШЕННЫЙ АВТОФОКУС И TAP-TO-FOCUS
+        // ==========================================
+        
+        // Попытка программно включить непрерывный автофокус при старте
         const autofocusInterval = setInterval(() => {
             const video = document.querySelector('video');
             if (video && video.srcObject) {
                 const track = video.srcObject.getVideoTracks()[0];
                 if (track) {
-                    // Проверяем, поддерживает ли браузер/камера применение ограничений (constraints)
                     if (typeof track.applyConstraints === 'function') {
                         track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
-                            .catch(() => {
-                                // Если автофокус не поддерживается, просто игнорируем ошибку
-                            });
+                            .catch(() => {});
                     }
                     clearInterval(autofocusInterval);
                 }
             }
         }, 2000);
 
-        // Ручной "пинок" автофокуса по нажатию на экран
+        // Ручной фокус по клику на любой участок экрана (Tap to Focus)
         document.body.addEventListener('click', () => {
             const video = document.querySelector('video');
-            if (video && video.srcObject)
+            if (video && video.srcObject) {
+                const track = video.srcObject.getVideoTracks()[0];
+                if (track && typeof track.applyConstraints === 'function') {
+                    track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                }
+            }
+        });
+    </script>
+</body>
+</html>
