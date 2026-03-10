@@ -67,23 +67,23 @@
             
             <!-- 
                 1. НЕВИДИМАЯ ДЫРКА (Окклюзия)
-                Масштаб увеличен на 10%
+                Масштаб увеличен на 10%, позиция смещена влево по оси X на -0.05
             -->
-            <a-box position="0 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
+            <a-box position="-0.05 0 0" scale="0.55 0.85 0.17" occlusion-material></a-box>
 
             <!-- 2. ВИДИМЫЙ ЧЕХОЛ (Голограмма) -->
-            <!-- Чуть-чуть больше маски окклюзии, также увеличено на 10% -->
-            <a-box position="0 0 0" scale="0.57 0.87 0.19" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
-            <a-box position="0 0 0" scale="0.58 0.88 0.20" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
+            <!-- Чуть-чуть больше маски окклюзии, также увеличено на 10%, позиция смещена влево -->
+            <a-box position="-0.05 0 0" scale="0.57 0.87 0.19" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
+            <a-box position="-0.05 0 0" scale="0.58 0.88 0.20" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
 
             <!-- 
                 КОГДА СДЕЛАЕШЬ СВОЙ .GLB ФАЙЛ, ИСПОЛЬЗУЙ ЭТОТ КОД:
-                (заменив масштаб scale на нужный)
+                (заменив масштаб scale на нужный и сохранив позицию)
 
                 <a-assets>
                     <a-asset-item id="case-model" src="my_case.glb"></a-asset-item>
                 </a-assets>
-                <a-gltf-model src="#case-model" position="0 0 0" scale="0.55 0.55 0.55"></a-gltf-model>
+                <a-gltf-model src="#case-model" position="-0.05 0 0" scale="0.55 0.55 0.55"></a-gltf-model>
             -->
 
         </a-entity>
