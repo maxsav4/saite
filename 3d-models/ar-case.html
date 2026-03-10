@@ -67,15 +67,14 @@
             
             <!-- 
                 1. НЕВИДИМАЯ ДЫРКА (Окклюзия)
-                Масштаб пересчитан под физические пропорции пачки TEREA.
-                Ориентация исправлена на вертикальную.
+                Масштаб уменьшен ровно в 2 раза от предыдущего
             -->
-            <a-box position="0 0 0" scale="1.0 1.54 0.31" occlusion-material></a-box>
+            <a-box position="0 0 0" scale="0.5 0.77 0.15" occlusion-material></a-box>
 
             <!-- 2. ВИДИМЫЙ ЧЕХОЛ (Голограмма) -->
-            <!-- Чуть-чуть больше маски окклюзии, чтобы аккуратно обнимать коробку -->
-            <a-box position="0 0 0" scale="1.04 1.58 0.35" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
-            <a-box position="0 0 0" scale="1.06 1.60 0.37" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
+            <!-- Чуть-чуть больше маски окклюзии, также уменьшено в 2 раза -->
+            <a-box position="0 0 0" scale="0.52 0.79 0.17" color="#00ffcc" material="opacity: 0.3; transparent: true; metalness: 0.8; roughness: 0.2;"></a-box>
+            <a-box position="0 0 0" scale="0.53 0.80 0.18" material="wireframe: true; color: #00ffcc; opacity: 0.8;"></a-box>
 
             <!-- 
                 КОГДА СДЕЛАЕШЬ СВОЙ .GLB ФАЙЛ, ИСПОЛЬЗУЙ ЭТОТ КОД:
@@ -84,7 +83,7 @@
                 <a-assets>
                     <a-asset-item id="case-model" src="my_case.glb"></a-asset-item>
                 </a-assets>
-                <a-gltf-model src="#case-model" position="0 0 0" scale="1 1 1"></a-gltf-model>
+                <a-gltf-model src="#case-model" position="0 0 0" scale="0.5 0.5 0.5"></a-gltf-model>
             -->
 
         </a-entity>
