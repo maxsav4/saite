@@ -4,17 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Models | maxsav4</title>
+    
+    <!-- Подключаем стильные шрифты (Space Grotesk для заголовков, Outfit для текста) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- Подключаем библиотеку для 3D (Google Model Viewer) -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
     <style>
-        /* === БАЗОВЫЕ СТИЛИ И ФОН === */
+        /* === БАЗОВЫЕ СТИЛИ И ФОН (Стиль Жидкий Металл / Неон) === */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #030305;
+            background-color: #050505;
             color: #fff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(0, 200, 255, 0.05), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(255, 0, 200, 0.05), transparent 25%);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Анимированные размытые сферы на фоне (как на референсах) */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: floatOrb 20s infinite alternate ease-in-out;
+            opacity: 0.4;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #00ffcc; }
+        .orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #ff00ff; animation-delay: -5s; }
+        .orb-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #ffaa00; animation-delay: -10s; filter: blur(120px); opacity: 0.2; }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(10vw, 15vh) scale(1.2); }
         }
 
         /* === ШАПКА === */
@@ -22,10 +48,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 20px 5%;
-            background: rgba(3, 3, 5, 0.85);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            padding: 25px 5%;
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             position: sticky;
             top: 0;
@@ -33,106 +59,149 @@
         }
         
         .back-btn {
-            color: #888;
+            color: #aaa;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
             transition: 0.3s;
             background: rgba(255, 255, 255, 0.05);
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .back-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.1); transform: translateX(-5px); }
+        .back-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.15); transform: translateX(-5px); }
         
         .header h1 {
-            font-size: 1.5rem;
-            letter-spacing: 4px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
             margin: 0;
             text-transform: uppercase;
-            font-weight: 800;
+            font-weight: 900;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
         }
 
-        /* === КАТАЛОГ СЕТКА PINTEREST STYLE (MASONRY) === */
+        /* === КАТАЛОГ СЕТКА PINTEREST STYLE === */
         .catalog-container {
             padding: 40px 5%;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            /* Настройки Pinterest-колонок */
             column-count: 4;
-            column-gap: 25px;
+            column-gap: 30px;
         }
 
-        /* Адаптивность колонок */
-        @media (max-width: 1200px) { .catalog-container { column-count: 3; } }
-        @media (max-width: 900px) { .catalog-container { column-count: 2; } }
-        @media (max-width: 500px) { .catalog-container { column-count: 1; } }
+        @media (max-width: 1400px) { .catalog-container { column-count: 3; } }
+        @media (max-width: 950px) { .catalog-container { column-count: 2; column-gap: 20px; } }
+        @media (max-width: 600px) { .catalog-container { column-count: 1; padding: 20px 5%; } }
 
         /* === КАРТОЧКА ТОВАРА === */
         .product-card {
-            break-inside: avoid; /* Чтобы карточка не разрывалась между колонками */
-            margin-bottom: 25px;
+            break-inside: avoid;
+            margin-bottom: 30px;
             position: relative;
-            border-radius: 24px;
+            border-radius: 20px;
             overflow: hidden;
-            background: #111;
+            background: rgba(15, 15, 15, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             cursor: pointer;
-            transform: translateZ(0); /* Аппаратное ускорение */
+            transform: translateZ(0);
+            transition: border-color 0.4s;
+        }
+        
+        .product-card:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Медиа контент (Изображение или 3D) */
+        .media-container {
+            width: 100%;
+            position: relative;
+            background: #000;
+            display: block;
         }
         
         .product-image {
             width: 100%;
             display: block;
             object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
-        .product-card:hover .product-image {
-            transform: scale(1.05);
+        
+        model-viewer {
+            width: 100%;
+            height: 400px; /* Базовая высота для 3D */
+            background-color: transparent;
+            --poster-color: transparent;
+            outline: none;
         }
+
+        .product-card:hover .product-image { transform: scale(1.03); }
 
         /* Статус (в наличии / под заказ) */
         .status-badge {
             position: absolute;
-            top: 15px; left: 15px;
-            padding: 6px 14px;
-            border-radius: 20px;
+            top: 20px; left: 20px;
+            padding: 8px 16px;
+            border-radius: 30px;
             font-size: 0.7rem;
-            font-weight: bold;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            z-index: 2;
+            letter-spacing: 2px;
+            z-index: 5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        .status-available { background: rgba(0, 255, 100, 0.15); color: #00ff64; border: 1px solid rgba(0, 255, 100, 0.3); }
-        .status-order { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+        .status-available { background: rgba(0, 255, 150, 0.15); color: #00ff96; border: 1px solid rgba(0, 255, 150, 0.4); }
+        .status-order { background: rgba(255, 100, 255, 0.15); color: #ff64ff; border: 1px solid rgba(255, 100, 255, 0.4); }
 
-        /* === ИНФОРМАЦИОННАЯ ПАНЕЛЬ (ПОЯВЛЯЕТСЯ ПРИ НАВЕДЕНИИ) === */
+        /* 3D Иконка */
+        .badge-3d {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        /* === ИНФОРМАЦИОННАЯ ПАНЕЛЬ === */
         .product-overlay {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
-            padding: 40px 20px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
+            padding: 50px 25px 25px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            opacity: 0; /* Скрыто по умолчанию на ПК */
-            transform: translateY(20px);
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(15px);
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            z-index: 2;
+            z-index: 10;
+            pointer-events: none; /* Чтобы 3D модель крутилась под текстом */
         }
         
-        .product-card:hover .product-overlay {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .product-card:hover .product-overlay { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
         .product-title {
-            font-size: 1.2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
             margin: 0;
             color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            line-height: 1.2;
         }
         
         .price-row {
@@ -142,20 +211,20 @@
             margin-top: 5px;
         }
         .product-price {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 900;
             color: #fff;
         }
 
         /* Кнопка "Заказать в TG" */
         .btn-order {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 10px 18px;
-            border-radius: 20px;
-            font-weight: bold;
+            background: #fff;
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
             font-size: 0.85rem;
             cursor: pointer;
             transition: 0.3s;
@@ -163,45 +232,44 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            letter-spacing: 1px;
         }
         .btn-order:hover {
-            background: #fff;
-            color: #000;
+            background: #00ffcc;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+            transform: scale(1.05);
         }
 
-        /* Индикатор загрузки */
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #888;
-            font-size: 1.2rem;
-            column-span: all;
-        }
-
-        /* Для мобильных устройств делаем панель всегда слегка видимой */
-        @media (max-width: 900px) {
+        /* Для мобильных устройств делаем панель всегда видимой */
+        @media (max-width: 950px) {
             .product-overlay {
                 opacity: 1;
                 transform: translateY(0);
-                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 70%, transparent 100%);
-                padding-top: 50px;
+                background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 60%, transparent 100%);
+                pointer-events: auto;
             }
+            model-viewer { height: 350px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- Анимированный фон (Стиль Жидкий Металл / Неон) -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
     <header class="header">
         <a href="../index.html" class="back-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             BACK
         </a>
         <h1>3D MODELS</h1>
-        <div style="width: 80px;"></div>
+        <div style="width: 100px;"></div>
     </header>
 
     <main class="catalog-container" id="catalog">
-        <div class="loading">Загрузка проектов...</div>
+        <!-- Контент загрузится через JS -->
     </main>
 
     <script>
@@ -210,16 +278,22 @@
 
         async function loadCatalog() {
             let products = [];
-            
             try {
-                // Пытаемся загрузить реальный файл (сработает на GitHub Pages)
+                // В реальных условиях грузим catalog.json
                 const response = await fetch('catalog.json');
                 if (!response.ok) throw new Error('Файл не найден');
                 products = await response.json();
             } catch (error) {
-                console.warn("Используем демо-данные для предпросмотра:", error);
-                // Фолбэк-данные, если скрипт запущен локально без сервера или в предпросмотре
+                // Демо-данные с примером 3D модели
                 products = [
+                    {
+                        "id": "astro-01",
+                        "title": "Astronaut Model (3D)",
+                        "price": "800 ₴",
+                        "status": "available",
+                        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+                        "image": ""
+                    },
                     {
                         "id": "bear-01",
                         "title": "Cyber Bear (Low Poly)",
@@ -228,32 +302,11 @@
                         "image": "https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600&h=800"
                     },
                     {
-                        "id": "skull-02",
-                        "title": "Anatomy Skull Stand",
-                        "price": "750 ₴",
-                        "status": "order",
-                        "image": "https://images.unsplash.com/photo-1594953934789-fce2a3f7ffec?auto=format&fit=crop&q=80&w=600&h=400"
-                    },
-                    {
-                        "id": "lamp-03",
-                        "title": "Neon Grid Lamp",
-                        "price": "1200 ₴",
-                        "status": "available",
-                        "image": "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=600&h=900"
-                    },
-                    {
                         "id": "mech-04",
                         "title": "Mecha Parts Kit",
                         "price": "от 300 ₴",
                         "status": "order",
                         "image": "https://images.unsplash.com/photo-1537151377170-9c19a791bbea?auto=format&fit=crop&q=80&w=600&h=600"
-                    },
-                    {
-                        "id": "controller-05",
-                        "title": "Custom ESP Case",
-                        "price": "400 ₴",
-                        "status": "available",
-                        "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600&h=500"
                     }
                 ];
             }
@@ -271,24 +324,104 @@
                 const message = `Привет! 👋\nХочу заказать:\n\n📦 Товар: ${product.title}\n🆔 ID: ${product.id}\n💰 Цена: ${product.price}\n\nПодскажи детали?`;
                 const tgLink = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
 
-                const imgSrc = product.image ? product.image : 'https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600';
+                // Логика: если есть 3D модель, показываем плеер, если нет — картинку
+                let mediaHTML = '';
+                if (product.model) {
+                    mediaHTML = `
+                        <div class="badge-3d">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        </div>
+                        <model-viewer 
+                            src="${product.model}" 
+                            auto-rotate 
+                            rotation-per-second="30deg"
+                            camera-controls
+                            interaction-prompt="none"
+                            shadow-intensity="1"
+                            exposure="1.2">
+                        </model-viewer>
+                    `;
+                } else {
+                    const imgSrc = product.image ? product.image : 'https://images.unsplash.com/photo-1615554869502-d7b0f69a19c7?auto=format&fit=crop&q=80&w=600';
+                    mediaHTML = `<img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">`;
+                }
 
                 card.innerHTML = `
                     <span class="status-badge ${statusClass}">${statusText}</span>
-                    <img src="${imgSrc}" alt="${product.title}" class="product-image" loading="lazy">
+                    <div class="media-container">${mediaHTML}</div>
                     
                     <div class="product-overlay">
                         <h3 class="product-title">${product.title}</h3>
                         <div class="price-row">
                             <span class="product-price">${product.price}</span>
                             <a href="${tgLink}" target="_blank" class="btn-order">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                                 ЗАКАЗАТЬ
                             </a>
                         </div>
                     </div>
                 `;
                 catalogContainer.appendChild(card);
+            });
+
+            initGyroAndIdleLogic();
+        }
+
+        // === ЛОГИКА ВРАЩЕНИЯ: ГИРОСКОП + 5 СЕК ОЖИДАНИЯ ===
+        function initGyroAndIdleLogic() {
+            let lastMoveTime = Date.now();
+            let isIdle = true;
+            let lastGamma = 0;
+            let lastBeta = 0;
+
+            const viewers = document.querySelectorAll('model-viewer');
+
+            // 1. Отслеживание бездействия (5 секунд)
+            setInterval(() => {
+                if (Date.now() - lastMoveTime > 5000 && !isIdle) {
+                    isIdle = true;
+                    // Включаем встроенное плавное вращение
+                    viewers.forEach(v => {
+                        v.setAttribute('auto-rotate', 'true');
+                    });
+                }
+            }, 1000);
+
+            // 2. Сброс таймера при прикосновении к экрану
+            window.addEventListener('touchstart', () => {
+                lastMoveTime = Date.now();
+                if (isIdle) {
+                    isIdle = false;
+                    viewers.forEach(v => v.removeAttribute('auto-rotate'));
+                }
+            }, {passive: true});
+
+            // 3. Управление гироскопом
+            window.addEventListener('deviceorientation', (e) => {
+                if (!e.gamma || !e.beta) return;
+                
+                // Проверяем, достаточно ли сильно изменился наклон (чтобы игнорировать дрожание рук)
+                const delta = Math.abs(e.gamma - lastGamma) + Math.abs(e.beta - lastBeta);
+                
+                if (delta > 1.5) {
+                    lastMoveTime = Date.now();
+                    lastGamma = e.gamma;
+                    lastBeta = e.beta;
+                    
+                    if (isIdle) {
+                        isIdle = false;
+                        viewers.forEach(v => v.removeAttribute('auto-rotate'));
+                    }
+
+                    viewers.forEach(v => {
+                        // gamma (влево/вправо) конвертируем в азимут орбиты камеры
+                        const theta = e.gamma * 1.5; 
+                        // beta (вперед/назад) конвертируем в высоту (полярный угол)
+                        const phi = 75 + (e.beta - 45); 
+                        
+                        v.cameraOrbit = `${theta}deg ${phi}deg auto`;
+                    });
+                }
             });
         }
 
