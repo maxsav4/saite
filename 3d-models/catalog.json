@@ -6,6 +6,7 @@
         "status": "available",
         "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
         "model": "terea.glb",
+        "scale": "0.01 0.01 0.01",
         "customLink": "ar-case.html",
         "customLinkText": "ПРИМЕРИТЬ В AR",
         "description": "Первая итерация защитного кейса с оптимизированным трекингом."
