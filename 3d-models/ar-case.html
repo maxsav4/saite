@@ -7,6 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     
+    <!-- Используем проверенную связку версий для максимальной плавности -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
@@ -24,29 +25,22 @@
         @keyframes pulse { 0% { border-color: rgba(0, 255, 204, 0.3); } 50% { border-color: rgba(0, 255, 204, 1); } 100% { border-color: rgba(0, 255, 204, 0.3); } }
 
         #example-scanning-overlay { display: none !important; }
-        #error-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px; display: none; z-index: 2000; text-align: center; }
+        
+        /* Плавное появление сцены */
+        #ar-canvas { opacity: 0; transition: opacity 1s ease-in; }
+        #ar-canvas.ready { opacity: 1; }
     </style>
 
     <script>
-        // Окклюзия (невидимая маска)
         AFRAME.registerComponent('occlusion-material', {
             init: function () {
                 const mesh = this.el.getObject3D('mesh');
                 if (mesh) { mesh.material.colorWrite = false; }
             }
         });
-
-        window.addEventListener('load', () => {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                const err = document.getElementById('error-message');
-                if (err) { err.style.display = 'block'; err.innerText = "Ваш браузер не поддерживает доступ к камере."; }
-            }
-        });
     </script>
 </head>
 <body>
-
-    <div id="error-message"></div>
 
     <div class="ui-overlay">
         <div class="header">
@@ -58,11 +52,17 @@
         </div>
     </div>
 
-    <!-- Фильтры сглаживания -->
+    <!-- 
+        Оптимизация параметров:
+        filterMinCF: 0.0001 (супер-плавность на месте)
+        filterBeta: 0.001 (мягкое следование за движением)
+        missTolerance: 5 (не теряет цель мгновенно при резком повороте)
+    -->
     <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.01;" 
+        id="ar-canvas"
+        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 5;" 
         color-space="sRGB" 
-        renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true;" 
+        renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true; precision: high;" 
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
         
@@ -74,20 +74,18 @@
 
         <a-entity id="target-box" mindar-image-target="targetIndex: 0">
             
-            <!-- Обертка с зафиксированными настройками (Масштаб: 0.012, Позиция: X -0.066, Y 0.06) -->
+            <!-- Группировка всех элементов калибровки -->
             <a-entity id="adjustable-wrapper" position="-0.066 0.06 0" scale="0.012 0.012 0.012">
                 
-                <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). -->
+                <!-- Невидимая маска окклюзии -->
                 <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
-                <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-                <!-- Поворот зафиксирован по твоим параметрам (Z: 270) -->
+                <!-- Финальная 3D модель чехла (X: 0, Y: -90, Z: 270) -->
                 <a-gltf-model 
-                    id="case-model-entity"
                     src="#case-model" 
                     position="0 0 0" 
                     scale="1 1 1"
-                    rotation="0 0 270">
+                    rotation="0 -90 270">
                 </a-gltf-model>
 
             </a-entity>
@@ -98,6 +96,12 @@
     <script>
         const target = document.querySelector('#target-box');
         const statusText = document.querySelector('#status-text');
+        const scene = document.querySelector('a-scene');
+
+        // Показываем сцену только когда всё загрузилось
+        scene.addEventListener("renderstart", () => {
+            document.querySelector('#ar-canvas').classList.add('ready');
+        });
 
         if (target) {
             target.addEventListener("targetFound", () => {
@@ -115,22 +119,21 @@
             });
         }
 
-        // Автофокус при тапе (панель отладки удалена)
+        // Улучшенный автофокус по тапу
         document.body.addEventListener('click', async (e) => {
-            // Игнорируем клики по ссылкам навигации
             if(e.target.closest('a')) return;
-            
             try {
                 const video = document.querySelector('video');
                 if (video && video.srcObject) {
                     const track = video.srcObject.getVideoTracks()[0];
                     if (track && typeof track.applyConstraints === 'function') {
-                        await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+                        // Пытаемся применить максимальное качество фокусировки
+                        await track.applyConstraints({
+                            advanced: [{ focusMode: 'continuous', focusDistance: 0 }]
+                        });
                     }
                 }
-            } catch (err) {
-                console.log("Автофокус не сработал");
-            }
+            } catch (err) {}
         });
     </script>
 </body>
