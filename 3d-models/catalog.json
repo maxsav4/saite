@@ -14,7 +14,7 @@
     {
         "id": "project-421",
         "title": "Industrial Module 421",
-        "price": "550 ₴",
+        "price": "120 ₴",
         "status": "available",
         "model": "421.glb",
         "scale": "0.01 0.01 0.01",
@@ -23,7 +23,7 @@
     {
         "id": "buddy-bot",
         "title": "Buddy Bot Scout",
-        "price": "400 ₴",
+        "price": "50 ₴",
         "status": "available",
         "model": "buddy.glb",
         "scale": "0.01 0.01 0.01",
