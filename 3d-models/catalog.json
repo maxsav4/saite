@@ -1,34 +1,39 @@
 [
     {
         "id": "terea-case-v1",
-        "title": "TEREA Case V1",
+        "title": "TEREA AR Case (V1)",
         "price": "350 ₴",
         "status": "available",
         "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
+        "model": "terea.glb",
         "customLink": "ar-case.html",
-        "customLinkText": "ПРИМЕРИТЬ В AR"
+        "customLinkText": "ПРИМЕРИТЬ В AR",
+        "description": "Первая итерация защитного кейса с оптимизированным трекингом."
     },
     {
         "id": "project-421",
-        "title": "Module 421",
+        "title": "Industrial Module 421",
         "price": "550 ₴",
         "status": "available",
         "model": "421.glb",
-        "description": "Инженерная деталь, оптимизированная под PETG печать."
+        "scale": "0.01 0.01 0.01",
+        "description": "Инженерная деталь. Масштаб адаптирован для просмотра на столе."
     },
     {
         "id": "buddy-bot",
-        "title": "Buddy Character",
+        "title": "Buddy Bot Scout",
         "price": "400 ₴",
         "status": "available",
         "model": "buddy.glb",
-        "description": "Коллекционная фигурка в стиле лоу-поли."
+        "scale": "0.01 0.01 0.01",
+        "description": "Коллекционная фигурка. Масштаб уменьшен."
     },
     {
-        "id": "astro-demo",
-        "title": "Astronaut (Demo)",
-        "price": "Бесплатно",
-        "status": "available",
-        "model": "https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+        "id": "liquid-chrome-sculpt",
+        "title": "Liquid Chrome Core",
+        "price": "600 ₴",
+        "status": "order",
+        "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600&h=450",
+        "description": "Арт-объект в стиле жидкого металла."
     }
 ]
