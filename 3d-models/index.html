@@ -6,7 +6,7 @@
     <title>3D Каталог | maxsav4</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Подключаем мощный движок для 3D предпросмотра и AR -->
+    <!-- Подключаем движок для 3D предпросмотра -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
@@ -15,16 +15,7 @@
         .card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; display: flex; flex-direction: column; }
         
         /* Стили для 3D предпросмотра внутри карточки */
-        model-viewer { 
-            width: 100%; 
-            height: 250px; 
-            background-color: #222; 
-            border-radius: 10px; 
-            margin-bottom: 15px; 
-            outline: none; 
-            /* Мягкая тень под моделью */
-            --poster-color: transparent;
-        }
+        model-viewer { width: 100%; height: 250px; background-color: #222; border-radius: 10px; margin-bottom: 15px; outline: none; }
         
         .card img { max-width: 100%; border-radius: 10px; margin-bottom: 15px; height: 250px; object-fit: cover; }
         .btn { display: inline-block; background: #00ffcc; color: #000; padding: 12px 20px; text-decoration: none; border-radius: 20px; font-weight: bold; cursor: pointer; border: none; margin-top: auto; width: 100%; box-sizing: border-box; transition: 0.3s; }
@@ -48,11 +39,9 @@
                     
                     let mediaHtml = '';
                     
-                    // ГЕНЕРАЦИЯ 3D-ОКНА
+                    // ГЕНЕРАЦИЯ 3D-ОКНА С ПРАВИЛЬНЫМ AR И ГИРОСКОПОМ
                     if (item.model) {
-                        // Подхватываем масштаб из JSON (чтобы уменьшить гигантские модели)
                         const scaleAttr = item.scale ? `scale="${item.scale}"` : '';
-                        
                         mediaHtml = `
                             <model-viewer 
                                 src="${item.model}" 
@@ -60,19 +49,20 @@
                                 ar-modes="webxr scene-viewer quick-look" 
                                 camera-controls 
                                 auto-rotate 
-                                rotation-per-second="30deg"
                                 camera-orbit="45deg 60deg auto" 
                                 shadow-intensity="1"
                                 ar-placement="floor"
+                                ar-scale="auto"
                                 ${scaleAttr}>
                             </model-viewer>
                         `;
                     } 
+                    // Если модели нет, но есть фото
                     else if (item.image) {
                         mediaHtml = `<img src="${item.image}" alt="${item.title}">`;
                     }
 
-                    // Кнопка для перехода в сканер (только для чехла)
+                    // Отдельная кнопка сканера для чехла
                     let btnHtml = '';
                     if (item.customLink) {
                         btnHtml = `<a href="${item.customLink}" class="btn">${item.customLinkText}</a>`;
