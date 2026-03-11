@@ -77,11 +77,10 @@
             <!-- Обертка с зафиксированными настройками (Масштаб: 0.012, Позиция: X -0.066, Y 0.06) -->
             <a-entity id="adjustable-wrapper" position="-0.066 0.06 0" scale="0.012 0.012 0.012">
                 
-                <!-- 1. НЕВИДИМАЯ ДЫРКА (Окклюзия). -->
+                <!-- НЕВИДИМАЯ ДЫРКА (Окклюзия) -->
                 <a-box position="0 0 0" scale="1 1.545 0.309" occlusion-material></a-box>
 
-                <!-- 2. ТВОЯ 3D МОДЕЛЬ ЧЕХЛА -->
-                <!-- Поворот зафиксирован по твоим параметрам (Z: 270) -->
+                <!-- ФИНАЛЬНЫЙ ПОВОРОТ (X:0, Y:0, Z:270) -->
                 <a-gltf-model 
                     id="case-model-entity"
                     src="#case-model" 
@@ -115,11 +114,9 @@
             });
         }
 
-        // Автофокус при тапе (панель отладки удалена)
+        // Автофокус при тапе
         document.body.addEventListener('click', async (e) => {
-            // Игнорируем клики по ссылкам навигации
             if(e.target.closest('a')) return;
-            
             try {
                 const video = document.querySelector('video');
                 if (video && video.srcObject) {
@@ -128,9 +125,7 @@
                         await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
                     }
                 }
-            } catch (err) {
-                console.log("Автофокус не сработал");
-            }
+            } catch (err) {}
         });
     </script>
 </body>
