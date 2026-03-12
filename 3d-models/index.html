@@ -46,8 +46,9 @@
                     
                     let mediaHtml = '';
                     
-                    // УМНЫЙ ПЛЕЕР (с привязкой к полу, авто-масштабом, проигрыванием анимаций и гироскопом)
+                    // Если есть 3D модель - выводим плеер
                     if (item.model) {
+                        const scaleAttr = item.scale ? `scale="${item.scale}"` : '';
                         mediaHtml = `
                             <model-viewer 
                                 src="${item.model}" 
@@ -60,10 +61,11 @@
                                 shadow-intensity="1"
                                 ar-placement="floor"
                                 ar-scale="auto"
-                                autoplay>
+                                ${scaleAttr}>
                             </model-viewer>
                         `;
                     } 
+                    // Если модели нет, но есть фото
                     else if (item.image) {
                         mediaHtml = `<img src="${item.image}" alt="${item.title}">`;
                     }
