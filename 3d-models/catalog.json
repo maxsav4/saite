@@ -1,40 +1,52 @@
 [
     {
         "id": "terea-case-v1",
-        "title": "TEREA AR Case (V1)",
+        "title": "TEREA AR Case",
         "price": "350 ₴",
         "status": "available",
-        "image": "https://images.unsplash.com/photo-1620052581237-5d36e761ebf3?auto=format&fit=crop&q=80&w=600&h=400",
-        "model": "terea.glb",
-        "scale": "0.01 0.01 0.01",
+        "model": "glb/terea.glb",
         "customLink": "ar-case.html",
-        "customLinkText": "ПРИМЕРИТЬ В AR",
-        "description": "Первая итерация защитного кейса с оптимизированным трекингом."
+        "customLinkText": "ПРИМЕРИТЬ НА ПАЧКУ",
+        "description": "Защитный кейс. Нажмите 'Примерить на пачку', чтобы открыть сканер."
     },
     {
-        "id": "project-421",
-        "title": "Industrial Module 421",
-        "price": "120 ₴",
+        "id": "ar-rifle",
+        "title": "AR Model",
+        "price": "500 ₴",
         "status": "available",
-        "model": "421.glb",
-        "scale": "0.01 0.01 0.01",
-        "description": "Инженерная деталь. Масштаб адаптирован для просмотра на столе."
+        "model": "glb/ar.glb",
+        "description": "Детализированная 3D модель AR."
+    },
+    {
+        "id": "pm-pistol",
+        "title": "PM Model",
+        "price": "350 ₴",
+        "status": "available",
+        "model": "glb/pm.glb",
+        "description": "Классическая модель PM."
+    },
+    {
+        "id": "knife-tactical",
+        "title": "Tactical Knife",
+        "price": "250 ₴",
+        "status": "available",
+        "model": "glb/knife.glb",
+        "description": "Модель тактического ножа."
+    },
+    {
+        "id": "module-421",
+        "title": "Module 421",
+        "price": "50 ₴",
+        "status": "available",
+        "model": "glb/421.glb",
+        "description": "Инженерная деталь."
     },
     {
         "id": "buddy-bot",
-        "title": "Buddy Bot Scout",
+        "title": "Buddy Character",
         "price": "50 ₴",
         "status": "available",
-        "model": "buddy.glb",
-        "scale": "0.01 0.01 0.01",
-        "description": "Коллекционная фигурка. Масштаб уменьшен."
-    },
-    {
-        "id": "liquid-chrome-sculpt",
-        "title": "Liquid Chrome Core",
-        "price": "600 ₴",
-        "status": "order",
-        "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600&h=450",
-        "description": "Арт-объект в стиле жидкого металла."
+        "model": "glb/buddy.glb",
+        "description": "Коллекционная 3D фигурка."
     }
 ]
