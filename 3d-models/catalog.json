@@ -5,6 +5,7 @@
         "price": "350 ₴",
         "status": "available",
         "model": "glb/terea.glb",
+        "scale": "0.002 0.002 0.002".
         "customLink": "ar-case.html",
         "customLinkText": "ПРИМЕРИТЬ НА ПАЧКУ",
         "description": "Защитный кейс. Нажмите 'Примерить на пачку', чтобы открыть сканер."
@@ -15,7 +16,7 @@
         "price": "500 ₴",
         "status": "available",
         "model": "glb/ar.glb",
-        "scale": "0.01 0.01 0.01",
+        "scale": "0.002 0.002 0.002",
         "description": "Детализированная 3D модель AR."
     },
     {
@@ -24,7 +25,7 @@
         "price": "350 ₴",
         "status": "available",
         "model": "glb/pm.glb",
-        "scale": "0.01 0.01 0.01",
+        "scale": "0.002 0.002 0.002",
         "description": "Классическая модель PM."
     },
     {
@@ -33,7 +34,7 @@
         "price": "250 ₴",
         "status": "available",
         "model": "glb/knife.glb",
-        "scale": "0.01 0.01 0.01",
+        "scale": "0.002 0.002 0.002",
         "description": "Модель тактического ножа."
     },
     {
@@ -42,7 +43,7 @@
         "price": "50 ₴",
         "status": "available",
         "model": "glb/421.glb",
-        "scale": "0.01 0.01 0.01",
+        "scale": "0.002 0.002 0.002",
         "description": "Инженерная деталь."
     },
     {
@@ -51,7 +52,7 @@
         "price": "50 ₴",
         "status": "available",
         "model": "glb/buddy.glb",
-        "scale": "0.01 0.01 0.01",
+        "scale": "0.002 0.002 0.002",
         "description": "Коллекционная 3D фигурка."
     }
 ]
