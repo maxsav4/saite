@@ -50,6 +50,9 @@
                     // Если есть 3D модель - выводим плеер
                     if (item.model) {
                         const scaleAttr = item.scale ? `scale="${item.scale}"` : '';
+                        
+                        // Добавлен interaction-prompt="none" для скрытия анимации пальца
+                        // Изменен ar-scale на "fixed" для точного соблюдения масштаба
                         mediaHtml = `
                             <model-viewer 
                                 src="${item.model}" 
@@ -61,7 +64,8 @@
                                 camera-orbit="45deg 60deg auto"
                                 shadow-intensity="1"
                                 ar-placement="floor"
-                                ar-scale="auto"
+                                ar-scale="fixed"
+                                interaction-prompt="none"
                                 ${scaleAttr}>
                             </model-viewer>
                         `;
@@ -94,6 +98,7 @@
         let lastGamma = null;
         let lastBeta = null;
         let isTouching = false;
+        let gyroTimeout = null;
 
         // Отключаем гироскоп, пока пользователь крутит модель пальцем
         window.addEventListener('touchstart', () => isTouching = true);
@@ -115,25 +120,42 @@
 
             // Порог чувствительности (если телефон шевелится, а не лежит)
             if (Math.abs(deltaGamma) > 0.3 || Math.abs(deltaBeta) > 0.3) {
+                
+                // Сбрасываем таймер при каждом движении
+                if (gyroTimeout) {
+                    clearTimeout(gyroTimeout);
+                }
+
                 const viewers = document.querySelectorAll('model-viewer');
                 
                 viewers.forEach(viewer => {
-                    // Проверяем, загрузилась ли модель
                     if (!viewer.getCameraOrbit) return;
+                    
+                    // Отключаем автопрокрутку, пока крутим гироскопом
+                    viewer.removeAttribute('auto-rotate');
                     
                     const currentOrbit = viewer.getCameraOrbit();
                     
                     // Переводим радианы в градусы и добавляем наклон гироскопа
-                    // Коэффициент 1.5 делает вращение чуть более отзывчивым
                     let newTheta = (currentOrbit.theta * 180 / Math.PI) + (deltaGamma * 1.5);
                     let newPhi = (currentOrbit.phi * 180 / Math.PI) + (deltaBeta * 1.5);
 
-                    // Ограничиваем вертикальный угол, чтобы модель не переворачивалась вверх ногами
+                    // Ограничиваем вертикальный угол
                     newPhi = Math.max(10, Math.min(170, newPhi));
 
                     // Применяем новые координаты камеры
                     viewer.cameraOrbit = `${newTheta}deg ${newPhi}deg auto`;
                 });
+
+                // Устанавливаем таймер на 3 секунды бездействия
+                gyroTimeout = setTimeout(() => {
+                    viewers.forEach(viewer => {
+                        // Плавно выравниваем вид в исходное красивое положение
+                        viewer.cameraOrbit = "45deg 60deg auto";
+                        // Возвращаем автоматическое вращение
+                        viewer.setAttribute('auto-rotate', '');
+                    });
+                }, 3000);
             }
 
             // Запоминаем текущее положение для следующего кадра
