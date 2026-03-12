@@ -96,6 +96,7 @@
                     if (item.model) {
                         const scaleAttr = item.scale ? `scale="${item.scale}"` : '';
                         
+                        // Добавлен атрибут autoplay для запуска анимаций
                         mediaHtml = `
                             <model-viewer 
                                 id="${mvId}"
@@ -110,6 +111,7 @@
                                 ar-placement="floor"
                                 ar-scale="fixed"
                                 interaction-prompt="none"
+                                autoplay
                                 ${scaleAttr}>
                             </model-viewer>
                         `;
