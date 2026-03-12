@@ -35,6 +35,7 @@
     <div class="grid" id="catalog-grid"></div>
 
     <script>
+        // ЗАГРУЗКА КАТАЛОГА
         fetch('catalog.json')
             .then(res => res.json())
             .then(data => {
@@ -86,6 +87,71 @@
                     grid.appendChild(card);
                 });
             });
+
+        // ==========================================
+        // ЛОГИКА ГИРОСКОПА ДЛЯ ПРЕДПРОСМОТРА
+        // ==========================================
+        let lastGamma = null;
+        let lastBeta = null;
+        let isTouching = false;
+
+        // Отключаем гироскоп, пока пользователь крутит модель пальцем
+        window.addEventListener('touchstart', () => isTouching = true);
+        window.addEventListener('touchend', () => isTouching = false);
+
+        window.addEventListener('deviceorientation', (e) => {
+            // Если трогаем пальцем или данных нет - выходим
+            if (isTouching || e.gamma === null || e.beta === null) return;
+
+            if (lastGamma === null) {
+                lastGamma = e.gamma;
+                lastBeta = e.beta;
+                return;
+            }
+
+            // Вычисляем, насколько наклонили телефон
+            const deltaGamma = e.gamma - lastGamma;
+            const deltaBeta = e.beta - lastBeta;
+
+            // Порог чувствительности (если телефон шевелится, а не лежит)
+            if (Math.abs(deltaGamma) > 0.3 || Math.abs(deltaBeta) > 0.3) {
+                const viewers = document.querySelectorAll('model-viewer');
+                
+                viewers.forEach(viewer => {
+                    // Проверяем, загрузилась ли модель
+                    if (!viewer.getCameraOrbit) return;
+                    
+                    const currentOrbit = viewer.getCameraOrbit();
+                    
+                    // Переводим радианы в градусы и добавляем наклон гироскопа
+                    // Коэффициент 1.5 делает вращение чуть более отзывчивым
+                    let newTheta = (currentOrbit.theta * 180 / Math.PI) + (deltaGamma * 1.5);
+                    let newPhi = (currentOrbit.phi * 180 / Math.PI) + (deltaBeta * 1.5);
+
+                    // Ограничиваем вертикальный угол, чтобы модель не переворачивалась вверх ногами
+                    newPhi = Math.max(10, Math.min(170, newPhi));
+
+                    // Применяем новые координаты камеры
+                    viewer.cameraOrbit = `${newTheta}deg ${newPhi}deg auto`;
+                });
+            }
+
+            // Запоминаем текущее положение для следующего кадра
+            lastGamma = e.gamma;
+            lastBeta = e.beta;
+        });
+
+        // Запрос разрешения для гироскопа на iPhone (iOS 13+)
+        // Срабатывает один раз при первом тапе по экрану
+        document.body.addEventListener('click', async () => {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    await DeviceOrientationEvent.requestPermission();
+                } catch (err) {
+                    console.log("Доступ к гироскопу отклонен");
+                }
+            }
+        }, { once: true });
     </script>
 </body>
 </html>
