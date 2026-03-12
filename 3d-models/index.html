@@ -35,9 +35,12 @@
     <div class="grid" id="catalog-grid"></div>
 
     <script>
-        // ЗАГРУЗКА КАТАЛОГА
+        // ЗАГРУЗКА КАТАЛОГА С ОБРАБОТКОЙ ОШИБОК
         fetch('catalog.json')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Файл catalog.json не найден (Ошибка ' + res.status + ')');
+                return res.json();
+            })
             .then(data => {
                 const grid = document.getElementById('catalog-grid');
                 
@@ -51,8 +54,6 @@
                     if (item.model) {
                         const scaleAttr = item.scale ? `scale="${item.scale}"` : '';
                         
-                        // Добавлен interaction-prompt="none" для скрытия анимации пальца
-                        // Изменен ar-scale на "fixed" для точного соблюдения масштаба
                         mediaHtml = `
                             <model-viewer 
                                 src="${item.model}" 
@@ -90,6 +91,23 @@
                     `;
                     grid.appendChild(card);
                 });
+            })
+            .catch(err => {
+                // ВЫВОД ОШИБКИ ПРЯМО НА ЭКРАН (если файл не загрузился)
+                const grid = document.getElementById('catalog-grid');
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; background: #330000; border: 1px solid #ff0000; padding: 20px; border-radius: 10px; text-align: center;">
+                        <h2 style="color: #ff4444; margin-top: 0;">⚠️ Ошибка загрузки базы данных</h2>
+                        <p style="color: #fff;">${err.message}</p>
+                        <p style="color: #aaa; font-size: 0.9rem; margin-top: 15px;">
+                            <strong>Возможные причины:</strong><br>
+                            1. Вы открыли файл с компьютера (file://), а не через GitHub ссылку (https://...).<br>
+                            2. В файле catalog.json допущена синтаксическая ошибка (например, лишняя запятая).<br>
+                            3. Файл catalog.json не загружен на сервер.
+                        </p>
+                    </div>
+                `;
+                console.error("Ошибка Fetch:", err);
             });
 
         // ==========================================
