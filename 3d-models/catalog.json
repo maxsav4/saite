@@ -15,7 +15,7 @@
         "price": "500 ₴",
         "status": "available",
         "model": "glb/ar.glb",
-        "scale": "0.002 0.002 0.002",
+        "scale": "0.001 0.001 0.001",
         "description": "Детализированная 3D модель AR."
     },
     {
@@ -24,7 +24,7 @@
         "price": "350 ₴",
         "status": "available",
         "model": "glb/pm.glb",
-        "scale": "0.002 0.002 0.002",
+        "scale": "0.001 0.001 0.001",
         "description": "Классическая модель PM."
     },
     {
@@ -33,7 +33,16 @@
         "price": "250 ₴",
         "status": "available",
         "model": "glb/knife.glb",
-        "scale": "0.002 0.002 0.002",
+        "scale": "0.001 0.001 0.001",
+        "description": "Модель тактического ножа."
+    },
+    {
+        "id": "Chips",
+        "title": "Casino chips",
+        "price": "250 ₴",
+        "status": "available",
+        "model": "glb/casin.glb",
+        "scale": "0.001 0.001 0.001",
         "description": "Модель тактического ножа."
     },
     {
@@ -42,7 +51,7 @@
         "price": "50 ₴",
         "status": "available",
         "model": "glb/421.glb",
-        "scale": "0.002 0.002 0.002",
+        "scale": "0.001 0.001 0.001",
         "description": "Инженерная деталь."
     },
     {
@@ -51,7 +60,7 @@
         "price": "50 ₴",
         "status": "available",
         "model": "glb/buddy.glb",
-        "scale": "0.002 0.002 0.002",
+        "scale": "0.001 0.001 0.001",
         "description": "Коллекционная 3D фигурка."
     }
 ]
