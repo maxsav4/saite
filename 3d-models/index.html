@@ -13,26 +13,40 @@
         body { background-color: #050505; color: #fff; font-family: 'Space Grotesk', sans-serif; margin: 0; padding: 20px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
         
-        /* Адаптивность для ПК: увеличиваем окна */
+        /* Адаптивность для ПК */
         @media (min-width: 1024px) {
             .grid { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
-            model-viewer { height: 450px !important; }
+            .card model-viewer { height: 350px !important; }
         }
 
         .card { background: #111; border: 1px solid #333; border-radius: 20px; padding: 25px; text-align: center; display: flex; flex-direction: column; position: relative; }
         
-        model-viewer { width: 100%; height: 300px; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; margin-bottom: 20px; outline: none; }
+        .card model-viewer { width: 100%; height: 250px; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; margin-bottom: 20px; outline: none; }
         
-        /* Панель инструментов внутри модели */
-        .model-tools { position: absolute; top: 35px; right: 35px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
-        .tool-btn { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.2); color: white; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .tool-btn:hover { background: #00ffcc; color: #000; border-color: #00ffcc; }
+        /* Скрываем инструменты AR на сайте, показываем только в режиме камеры */
+        .ar-only { display: none !important; }
+        model-viewer.is-ar .ar-only { display: flex !important; }
+
+        /* Панель инструментов внутри AR */
+        .model-tools { position: absolute; top: 20px; right: 20px; flex-direction: column; gap: 15px; z-index: 10; }
+        .tool-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1.2rem; }
+        .tool-btn:hover { background: #00ffcc; border-color: #00ffcc; color: #000; }
 
         .card-buttons { display: flex; gap: 12px; margin-top: auto; }
         .btn { flex: 1; padding: 14px 10px; border-radius: 14px; font-weight: bold; cursor: pointer; border: none; font-size: 0.9rem; transition: 0.3s; font-family: 'Space Grotesk'; display: flex; align-items: center; justify-content: center; text-decoration: none; }
         .btn-order { background: transparent; border: 1px solid #ff00ff; color: #ff00ff; }
         .btn-view { background: #00ffcc; color: #000; border: 1px solid #00ffcc; }
         .btn:hover { transform: scale(1.03); }
+
+        /* Модальное окно предпросмотра для ПК */
+        #preview-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column;
+            align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        #preview-modal model-viewer { width: 90%; height: 80%; background: transparent; border: none; outline: none; }
+        .close-btn { position: absolute; top: 20px; right: 20px; background: #ff00ff; color: #fff; padding: 12px 25px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; font-family: 'Space Grotesk', sans-serif; z-index: 10000; transition: 0.3s; }
+        .close-btn:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -40,13 +54,20 @@
     <h1 style="text-align: center; color: #00ffcc; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px;">AR Studio Catalog</h1>
     <div class="grid" id="catalog-grid"></div>
 
+    <!-- Модальное окно для ПК -->
+    <div id="preview-modal">
+        <button class="close-btn" onclick="closePreview()">✖ ЗАКРЫТЬ</button>
+        <model-viewer id="modal-viewer" ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate camera-orbit="45deg 60deg auto" shadow-intensity="1" autoplay></model-viewer>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // Определение платформы
         const isTelegram = tg.platform !== 'unknown';
+        // Определяем ПК или мобильное устройство
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         fetch('catalog.json')
             .then(res => res.json())
@@ -58,11 +79,19 @@
                     const mvId = `mv-${index}`;
                     
                     if (item.model) {
+                        let baseScaleStr = item.scale || "1 1 1";
+                        let baseParts = baseScaleStr.split(' ').map(Number);
+                        // Вычисляем масштаб x10 для старта
+                        let startScaleStr = `${baseParts[0]*10} ${baseParts[1]*10} ${baseParts[2]*10}`;
+
+                        let viewBtnHtml = '';
+                        if (isMobile) {
+                            viewBtnHtml = `<button class="btn btn-view" onclick="document.getElementById('${mvId}').activateAR()">В AR</button>`;
+                        } else {
+                            viewBtnHtml = `<button class="btn btn-view" onclick="openPreview('${item.model}', '${startScaleStr}')">ПРЕДПРОСМОТР</button>`;
+                        }
+
                         card.innerHTML = `
-                            <div class="model-tools">
-                                <button class="tool-btn" onclick="resetModel('${mvId}')" title="Центрировать">🎯</button>
-                                <button class="tool-btn" onclick="toggleScale('${mvId}', this)" title="Реальный размер">📏</button>
-                            </div>
                             <model-viewer 
                                 id="${mvId}" 
                                 src="${item.model}" 
@@ -73,21 +102,45 @@
                                 camera-orbit="45deg 60deg auto" 
                                 shadow-intensity="1" 
                                 ar-placement="floor" 
-                                ar-scale="fixed"
+                                ar-scale="auto" 
                                 interaction-prompt="none" 
                                 autoplay
-                                scale="10 10 10">
+                                scale="${startScaleStr}"
+                                data-base-scale="${baseScaleStr}"
+                                data-enlarged="true">
+                                
+                                <!-- Эти кнопки появятся ТОЛЬКО внутри камеры AR -->
+                                <div class="model-tools ar-only">
+                                    <button class="tool-btn" onclick="resetModel('${mvId}')" title="Центрировать">🎯</button>
+                                    <button class="tool-btn" onclick="toggleScale('${mvId}', this)" title="Реальный размер">📏</button>
+                                </div>
                             </model-viewer>
+                            
                             <h2 style="margin: 10px 0;">${item.title}</h2>
                             <p style="color: #ff00ff; font-weight: bold; margin-bottom: 15px; font-size: 1.2rem;">${item.price}</p>
                             <div class="card-buttons">
                                 <button class="btn btn-order" onclick="handlePurchase('${item.title}', '${item.price}')">ЗАКАЗАТЬ</button>
-                                <button class="btn btn-view" onclick="document.getElementById('${mvId}').activateAR()">В AR</button>
+                                ${viewBtnHtml}
                             </div>
                         `;
+
+                        // Слушатель для переключения режима: сайт <-> камера AR
+                        setTimeout(() => {
+                            const mv = document.getElementById(mvId);
+                            if(mv) {
+                                mv.addEventListener('ar-status', (event) => {
+                                    if (event.detail.status === 'session-started') {
+                                        mv.classList.add('is-ar');
+                                    } else {
+                                        mv.classList.remove('is-ar');
+                                    }
+                                });
+                            }
+                        }, 100);
+
                     } else {
                         card.innerHTML = `
-                            <img src="${item.image}" style="width:100%; height:300px; border-radius:15px; margin-bottom:20px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                            <img src="${item.image}" style="width:100%; height:250px; border-radius:15px; margin-bottom:20px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
                             <h2 style="margin: 10px 0;">${item.title}</h2>
                             <p style="color: #ff00ff; font-weight: bold; margin-bottom: 15px;">${item.price}</p>
                             <button class="btn btn-order" style="width:100%" onclick="handlePurchase('${item.title}', '${item.price}')">ЗАКАЗАТЬ</button>
@@ -97,42 +150,60 @@
                 });
             });
 
-        // Функция покупки с редиректом
+        // Открытие 3D на весь экран (для ПК)
+        window.openPreview = (modelSrc, scale) => {
+            const modal = document.getElementById('preview-modal');
+            const mv = document.getElementById('modal-viewer');
+            mv.src = modelSrc;
+            mv.setAttribute('scale', scale);
+            modal.style.display = 'flex';
+        };
+
+        // Закрытие предпросмотра
+        window.closePreview = () => {
+            const modal = document.getElementById('preview-modal');
+            const mv = document.getElementById('modal-viewer');
+            modal.style.display = 'none';
+            mv.src = '';
+        };
+
         function handlePurchase(title, price) {
             if (isTelegram) {
-                // Если мы в Telegram, отправляем данные боту
                 tg.sendData(JSON.stringify({item: title, price: price}));
                 tg.close();
             } else {
-                // Если мы в браузере, отправляем в бота
                 const message = encodeURIComponent(`Привет! Хочу заказать из каталога:\n🛍 Товар: ${title}\n💰 Цена: ${price}`);
                 window.location.href = `https://t.me/tereacase_bot?text=${message}`;
             }
         }
 
-        // Центрирование модели
         window.resetModel = (id) => {
             const mv = document.getElementById(id);
-            mv.cameraTarget = "0m 0m 0m";
+            mv.cameraTarget = "auto auto auto"; 
             mv.cameraOrbit = "45deg 60deg auto";
         };
 
-        // Переключение масштаба (x10 <-> 1:1)
         window.toggleScale = (id, btn) => {
             const mv = document.getElementById(id);
-            const currentScale = mv.getAttribute('scale');
-            if (currentScale === "10 10 10") {
-                mv.setAttribute('scale', '1 1 1');
-                btn.innerText = "🔍"; // Иконка "Приблизить"
+            const baseStr = mv.getAttribute('data-base-scale');
+            if (!baseStr) return;
+            const baseParts = baseStr.split(' ').map(Number);
+            const isEnlarged = mv.getAttribute('data-enlarged') === 'true';
+
+            if (isEnlarged) {
+                mv.setAttribute('scale', `${baseParts[0]} ${baseParts[1]} ${baseParts[2]}`);
+                mv.setAttribute('data-enlarged', 'false');
+                btn.innerText = "🔍"; // Иконка увеличить
                 btn.title = "Вернуть масштаб x10";
             } else {
-                mv.setAttribute('scale', '10 10 10');
-                btn.innerText = "📏"; // Иконка "Линейка"
+                mv.setAttribute('scale', `${baseParts[0]*10} ${baseParts[1]*10} ${baseParts[2]*10}`);
+                mv.setAttribute('data-enlarged', 'true');
+                btn.innerText = "📏"; // Иконка реального размера
                 btn.title = "Реальный размер";
             }
         };
 
-        // Гироскоп
+        // Усиленный гироскоп
         let lastGamma = null, lastBeta = null;
         window.addEventListener('deviceorientation', (e) => {
             if (e.gamma === null || e.beta === null) return;
@@ -140,7 +211,7 @@
             const deltaGamma = e.gamma - lastGamma;
             const deltaBeta = e.beta - lastBeta;
             if (Math.abs(deltaGamma) > 0.3 || Math.abs(deltaBeta) > 0.3) {
-                document.querySelectorAll('model-viewer').forEach(viewer => {
+                document.querySelectorAll('.card model-viewer:not(.is-ar)').forEach(viewer => {
                     const orbit = viewer.getCameraOrbit();
                     let newTheta = (orbit.theta * 180 / Math.PI) - (deltaGamma * 2.7);
                     let newPhi = (orbit.phi * 180 / Math.PI) - (deltaBeta * 2.7);
