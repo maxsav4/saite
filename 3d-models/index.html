@@ -4,70 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Каталог | maxsav4</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Подключаем движок для 3D предпросмотра -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         body { background-color: #050505; color: #fff; font-family: 'Space Grotesk', sans-serif; margin: 0; padding: 20px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        
-        .card { 
-            background: #111; 
-            border: 1px solid #333; 
-            border-radius: 15px; 
-            padding: 20px; 
-            text-align: center; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        
-        /* Стили для 3D предпросмотра внутри карточки - прозрачный фон и легкий контур */
-        model-viewer { 
-            width: 100%; 
-            height: 250px; 
-            background-color: transparent; 
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            border-radius: 10px; 
-            margin-bottom: 15px; 
-            outline: none; 
-        }
-        
-        .card img { max-width: 100%; border-radius: 10px; margin-bottom: 15px; height: 250px; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.15); }
-        
-        /* Блок с кнопками Заказать и Просмотр */
-        .card-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: auto;
-            width: 100%;
-        }
-
-        .btn { 
-            flex: 1;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            padding: 12px 10px; 
-            text-decoration: none; 
-            border-radius: 12px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            border: none; 
-            font-size: 0.85rem;
-            transition: 0.3s; 
-            font-family: 'Space Grotesk', sans-serif;
-        }
-        .btn:hover { transform: scale(1.03); }
-        
-        /* Кнопка Заказать (Контурная) */
+        .card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; display: flex; flex-direction: column; }
+        model-viewer { width: 100%; height: 250px; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; margin-bottom: 15px; outline: none; }
+        .card-buttons { display: flex; gap: 10px; margin-top: auto; }
+        .btn { flex: 1; padding: 12px 10px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 0.85rem; transition: 0.3s; font-family: 'Space Grotesk'; display: flex; align-items: center; justify-content: center; text-decoration: none; }
         .btn-order { background: transparent; border: 1px solid #ff00ff; color: #ff00ff; }
-        .btn-order:hover { background: rgba(255, 0, 255, 0.1); }
-        
-        /* Кнопка Просмотр/AR (Залитая) */
         .btn-view { background: #00ffcc; color: #000; border: 1px solid #00ffcc; }
-        .btn-view:hover { background: #00cca3; border-color: #00cca3; }
+        .btn:hover { transform: scale(1.03); }
     </style>
 </head>
 <body>
@@ -76,177 +27,65 @@
     <div class="grid" id="catalog-grid"></div>
 
     <script>
-        // ЗАГРУЗКА КАТАЛОГА С ОБРАБОТКОЙ ОШИБОК
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
         fetch('catalog.json')
-            .then(res => {
-                if (!res.ok) throw new Error('Файл catalog.json не найден (Ошибка ' + res.status + ')');
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 const grid = document.getElementById('catalog-grid');
-                
                 data.forEach((item, index) => {
                     const card = document.createElement('div');
                     card.className = 'card';
+                    const mvId = `mv-${index}`;
                     
-                    let mediaHtml = '';
-                    const mvId = `mv-${index}`; // Уникальный ID для плеера, чтобы запускать AR кнопкой
-                    
-                    // Если есть 3D модель - выводим плеер
-                    if (item.model) {
-                        const scaleAttr = item.scale ? `scale="${item.scale}"` : '';
-                        
-                        // Добавлен атрибут autoplay для запуска анимаций
-                        mediaHtml = `
-                            <model-viewer 
-                                id="${mvId}"
-                                src="${item.model}" 
-                                ar 
-                                ar-modes="webxr scene-viewer quick-look" 
-                                camera-controls 
-                                auto-rotate 
-                                auto-rotate-delay="2000"
-                                camera-orbit="45deg 60deg auto"
-                                shadow-intensity="1"
-                                ar-placement="floor"
-                                ar-scale="fixed"
-                                interaction-prompt="none"
-                                autoplay
-                                ${scaleAttr}>
-                            </model-viewer>
-                        `;
-                    } 
-                    // Если модели нет, но есть фото
-                    else if (item.image) {
-                        mediaHtml = `<img src="${item.image}" alt="${item.title}">`;
-                    }
-
-                    // Генерация кнопок для карточки
-                    let viewBtnHtml = '';
-                    if (item.customLink) {
-                        // Для чехла TEREA открываем его отдельный сканер
-                        viewBtnHtml = `<a href="${item.customLink}" class="btn btn-view">${item.customLinkText || 'ПРОСМОТР'}</a>`;
-                    } else if (item.model) {
-                        // Для остальных моделей запускаем AR-режим встроенного плеера
-                        viewBtnHtml = `<button class="btn btn-view" onclick="document.getElementById('${mvId}').activateAR()">В AR</button>`;
-                    } else {
-                        viewBtnHtml = `<button class="btn btn-view">ФОТО</button>`;
-                    }
+                    const mediaHtml = item.model ? `
+                        <model-viewer id="${mvId}" src="${item.model}" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate camera-orbit="45deg 60deg auto" shadow-intensity="1" ar-placement="floor" ar-scale="auto" interaction-prompt="none" autoplay></model-viewer>
+                    ` : `<img src="${item.image}" style="width:100%; border-radius:10px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.15);">`;
 
                     card.innerHTML = `
                         ${mediaHtml}
                         <h2 style="margin: 10px 0;">${item.title}</h2>
                         <p style="color: #ff00ff; font-weight: bold; margin-bottom: 15px; font-size: 1.1rem;">${item.price}</p>
-                        
                         <div class="card-buttons">
-                            <!-- Заготовка под покупку -->
-                            <button class="btn btn-order" onclick="alert('Вы собираетесь заказать: ${item.title}')">ЗАКАЗАТЬ</button>
-                            ${viewBtnHtml}
+                            <button class="btn btn-order" onclick="sendOrder('${item.title}', '${item.price}')">ЗАКАЗАТЬ</button>
+                            <button class="btn btn-view" onclick="document.getElementById('${mvId}').activateAR()">В AR</button>
                         </div>
                     `;
                     grid.appendChild(card);
                 });
-            })
-            .catch(err => {
-                // ВЫВОД ОШИБКИ ПРЯМО НА ЭКРАН
-                const grid = document.getElementById('catalog-grid');
-                grid.innerHTML = `
-                    <div style="grid-column: 1 / -1; background: #330000; border: 1px solid #ff0000; padding: 20px; border-radius: 10px; text-align: center;">
-                        <h2 style="color: #ff4444; margin-top: 0;">⚠️ Ошибка загрузки базы данных</h2>
-                        <p style="color: #fff;">${err.message}</p>
-                        <p style="color: #aaa; font-size: 0.9rem; margin-top: 15px;">
-                            <strong>Возможные причины:</strong><br>
-                            1. Вы открыли файл с компьютера (file://), а не через GitHub ссылку (https://...).<br>
-                            2. В файле catalog.json допущена синтаксическая ошибка (например, лишняя запятая).<br>
-                            3. Файл catalog.json не загружен на сервер.
-                        </p>
-                    </div>
-                `;
-                console.error("Ошибка Fetch:", err);
             });
 
-        // ==========================================
-        // ЛОГИКА ГИРОСКОПА ДЛЯ ПРЕДПРОСМОТРА
-        // ==========================================
-        let lastGamma = null;
-        let lastBeta = null;
-        let isTouching = false;
-        let gyroTimeout = null;
-
-        // Отключаем гироскоп, пока пользователь крутит модель пальцем
-        window.addEventListener('touchstart', () => isTouching = true);
-        window.addEventListener('touchend', () => isTouching = false);
-
-        window.addEventListener('deviceorientation', (e) => {
-            // Если трогаем пальцем или данных нет - выходим
-            if (isTouching || e.gamma === null || e.beta === null) return;
-
-            if (lastGamma === null) {
-                lastGamma = e.gamma;
-                lastBeta = e.beta;
-                return;
+        function sendOrder(title, price) {
+            if (tg.initData) {
+                // Отправляем данные в бот (Cloudflare их поймает)
+                tg.sendData(JSON.stringify({item: title, price: price}));
+                tg.close();
+            } else {
+                alert('Откройте каталог через Telegram бота для оформления заказа.');
             }
+        }
 
-            // Вычисляем, насколько наклонили телефон
+        // Гироскоп (инверсия +80%)
+        let lastGamma = null, lastBeta = null;
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.gamma === null || e.beta === null) return;
+            if (lastGamma === null) { lastGamma = e.gamma; lastBeta = e.beta; return; }
             const deltaGamma = e.gamma - lastGamma;
             const deltaBeta = e.beta - lastBeta;
-
-            // Порог чувствительности (если телефон шевелится, а не лежит)
             if (Math.abs(deltaGamma) > 0.3 || Math.abs(deltaBeta) > 0.3) {
-                
-                // Сбрасываем таймер при каждом движении
-                if (gyroTimeout) {
-                    clearTimeout(gyroTimeout);
-                }
-
-                const viewers = document.querySelectorAll('model-viewer');
-                
-                viewers.forEach(viewer => {
+                document.querySelectorAll('model-viewer').forEach(viewer => {
                     if (!viewer.getCameraOrbit) return;
-                    
-                    // Отключаем автопрокрутку, пока крутим гироскопом
                     viewer.removeAttribute('auto-rotate');
-                    
-                    const currentOrbit = viewer.getCameraOrbit();
-                    
-                    // ИНВЕРСИЯ (минус вместо плюса) и УСИЛЕНИЕ НА 80% (умножаем на 2.7)
-                    let newTheta = (currentOrbit.theta * 180 / Math.PI) - (deltaGamma * 2.7);
-                    let newPhi = (currentOrbit.phi * 180 / Math.PI) - (deltaBeta * 2.7);
-
-                    // Ограничиваем вертикальный угол, чтобы модель не переворачивалась вверх ногами
-                    newPhi = Math.max(10, Math.min(170, newPhi));
-
-                    // Применяем новые координаты камеры
-                    viewer.cameraOrbit = `${newTheta}deg ${newPhi}deg auto`;
+                    const orbit = viewer.getCameraOrbit();
+                    let newTheta = (orbit.theta * 180 / Math.PI) - (deltaGamma * 2.7);
+                    let newPhi = (orbit.phi * 180 / Math.PI) - (deltaBeta * 2.7);
+                    viewer.cameraOrbit = `${newTheta}deg ${Math.max(10, Math.min(170, newPhi))}deg auto`;
                 });
-
-                // Устанавливаем таймер на 3 секунды бездействия
-                gyroTimeout = setTimeout(() => {
-                    viewers.forEach(viewer => {
-                        // Плавно выравниваем вид в исходное красивое положение
-                        viewer.cameraOrbit = "45deg 60deg auto";
-                        // Возвращаем автоматическое вращение
-                        viewer.setAttribute('auto-rotate', '');
-                    });
-                }, 3000);
             }
-
-            // Запоминаем текущее положение для следующего кадра
-            lastGamma = e.gamma;
-            lastBeta = e.beta;
+            lastGamma = e.gamma; lastBeta = e.beta;
         });
-
-        // Запрос разрешения для гироскопа на iPhone (iOS 13+)
-        // Срабатывает один раз при первом тапе по экрану
-        document.body.addEventListener('click', async () => {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    await DeviceOrientationEvent.requestPermission();
-                } catch (err) {
-                    console.log("Доступ к гироскопу отклонен");
-                }
-            }
-        }, { once: true });
     </script>
 </body>
 </html>
