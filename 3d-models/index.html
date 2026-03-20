@@ -5,32 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Каталог | maxsav4</title>
     
-    <!-- SDK Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         body { background-color: #050505; color: #fff; font-family: 'Space Grotesk', sans-serif; margin: 0; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; display: flex; flex-direction: column; }
-        model-viewer { width: 100%; height: 250px; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; margin-bottom: 15px; outline: none; }
-        .card-buttons { display: flex; gap: 10px; margin-top: auto; }
-        .btn { flex: 1; padding: 12px 10px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 0.85rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk'; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
+        
+        /* Адаптивность для ПК: увеличиваем окна */
+        @media (min-width: 1024px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+            model-viewer { height: 450px !important; }
+        }
+
+        .card { background: #111; border: 1px solid #333; border-radius: 20px; padding: 25px; text-align: center; display: flex; flex-direction: column; position: relative; }
+        
+        model-viewer { width: 100%; height: 300px; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; margin-bottom: 20px; outline: none; }
+        
+        /* Панель инструментов внутри модели */
+        .model-tools { position: absolute; top: 35px; right: 35px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
+        .tool-btn { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.2); color: white; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .tool-btn:hover { background: #00ffcc; color: #000; border-color: #00ffcc; }
+
+        .card-buttons { display: flex; gap: 12px; margin-top: auto; }
+        .btn { flex: 1; padding: 14px 10px; border-radius: 14px; font-weight: bold; cursor: pointer; border: none; font-size: 0.9rem; transition: 0.3s; font-family: 'Space Grotesk'; display: flex; align-items: center; justify-content: center; text-decoration: none; }
         .btn-order { background: transparent; border: 1px solid #ff00ff; color: #ff00ff; }
-        .btn-view { background: #00ffcc; color: #000; }
+        .btn-view { background: #00ffcc; color: #000; border: 1px solid #00ffcc; }
         .btn:hover { transform: scale(1.03); }
     </style>
 </head>
 <body>
 
-    <h1 style="text-align: center; color: #00ffcc; margin-bottom: 40px;">AR КАТАЛОГ</h1>
+    <h1 style="text-align: center; color: #00ffcc; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px;">AR Studio Catalog</h1>
     <div class="grid" id="catalog-grid"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+
+        // Определение платформы
+        const isTelegram = tg.platform !== 'unknown';
 
         fetch('catalog.json')
             .then(res => res.json())
@@ -41,29 +57,82 @@
                     card.className = 'card';
                     const mvId = `mv-${index}`;
                     
-                    card.innerHTML = `
-                        <model-viewer id="${mvId}" src="${item.model}" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate shadow-intensity="1" ar-placement="floor" ar-scale="auto" interaction-prompt="none" autoplay></model-viewer>
-                        <h2 style="margin: 10px 0;">${item.title}</h2>
-                        <p style="color: #ff00ff; font-weight: bold; margin-bottom: 15px;">${item.price}</p>
-                        <div class="card-buttons">
-                            <button class="btn btn-order" onclick="orderItem('${item.title}', '${item.price}')">ЗАКАЗАТЬ</button>
-                            <button class="btn btn-view" onclick="document.getElementById('${mvId}').activateAR()">В AR</button>
-                        </div>
-                    `;
+                    if (item.model) {
+                        card.innerHTML = `
+                            <div class="model-tools">
+                                <button class="tool-btn" onclick="resetModel('${mvId}')" title="Центрировать">🎯</button>
+                                <button class="tool-btn" onclick="toggleScale('${mvId}', this)" title="Реальный размер">📏</button>
+                            </div>
+                            <model-viewer 
+                                id="${mvId}" 
+                                src="${item.model}" 
+                                ar 
+                                ar-modes="webxr scene-viewer quick-look" 
+                                camera-controls 
+                                auto-rotate 
+                                camera-orbit="45deg 60deg auto" 
+                                shadow-intensity="1" 
+                                ar-placement="floor" 
+                                ar-scale="fixed"
+                                interaction-prompt="none" 
+                                autoplay
+                                scale="10 10 10">
+                            </model-viewer>
+                            <h2 style="margin: 10px 0;">${item.title}</h2>
+                            <p style="color: #ff00ff; font-weight: bold; margin-bottom: 15px; font-size: 1.2rem;">${item.price}</p>
+                            <div class="card-buttons">
+                                <button class="btn btn-order" onclick="handlePurchase('${item.title}', '${item.price}')">ЗАКАЗАТЬ</button>
+                                <button class="btn btn-view" onclick="document.getElementById('${mvId}').activateAR()">В AR</button>
+                            </div>
+                        `;
+                    } else {
+                        card.innerHTML = `
+                            <img src="${item.image}" style="width:100%; height:300px; border-radius:15px; margin-bottom:20px; object-fit:cover; border: 1px solid rgba(255,255,255,0.1);">
+                            <h2 style="margin: 10px 0;">${item.title}</h2>
+                            <p style="color: #ff00ff; font-weight: bold; margin-bottom: 15px;">${item.price}</p>
+                            <button class="btn btn-order" style="width:100%" onclick="handlePurchase('${item.title}', '${item.price}')">ЗАКАЗАТЬ</button>
+                        `;
+                    }
                     grid.appendChild(card);
                 });
             });
 
-        function orderItem(title, price) {
-            // Отправляем данные боту. Это закроет Mini App и вызовет событие в Cloudflare
-            tg.sendData(JSON.stringify({
-                action: 'order',
-                item: title,
-                price: price
-            }));
+        // Функция покупки с редиректом
+        function handlePurchase(title, price) {
+            if (isTelegram) {
+                // Если мы в Telegram, отправляем данные боту
+                tg.sendData(JSON.stringify({item: title, price: price}));
+                tg.close();
+            } else {
+                // Если мы в браузере, отправляем в бота
+                const message = encodeURIComponent(`Привет! Хочу заказать из каталога:\n🛍 Товар: ${title}\n💰 Цена: ${price}`);
+                window.location.href = `https://t.me/tereacase_bot?text=${message}`;
+            }
         }
 
-        // Гироскоп с твоими настройками (инверсия +80% силы)
+        // Центрирование модели
+        window.resetModel = (id) => {
+            const mv = document.getElementById(id);
+            mv.cameraTarget = "0m 0m 0m";
+            mv.cameraOrbit = "45deg 60deg auto";
+        };
+
+        // Переключение масштаба (x10 <-> 1:1)
+        window.toggleScale = (id, btn) => {
+            const mv = document.getElementById(id);
+            const currentScale = mv.getAttribute('scale');
+            if (currentScale === "10 10 10") {
+                mv.setAttribute('scale', '1 1 1');
+                btn.innerText = "🔍"; // Иконка "Приблизить"
+                btn.title = "Вернуть масштаб x10";
+            } else {
+                mv.setAttribute('scale', '10 10 10');
+                btn.innerText = "📏"; // Иконка "Линейка"
+                btn.title = "Реальный размер";
+            }
+        };
+
+        // Гироскоп
         let lastGamma = null, lastBeta = null;
         window.addEventListener('deviceorientation', (e) => {
             if (e.gamma === null || e.beta === null) return;
